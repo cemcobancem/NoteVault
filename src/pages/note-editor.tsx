@@ -7,7 +7,7 @@ import { TagInput } from "@/components/ui/tag-input";
 import { db } from "@/lib/db";
 import { Note } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { Save, ArrowLeft } from "lucide-react";
+import { Save, ArrowLeft, Mic } from "lucide-react";
 import { NotebookSelector } from "@/components/ui/notebook-selector";
 import { 
   Dialog, 
@@ -16,6 +16,7 @@ import {
   DialogTitle 
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { VoiceRecorder } from "@/components/ui/voice-recorder";
 
 export default function NoteEditor() {
   const { id } = useParams();
@@ -34,6 +35,7 @@ export default function NoteEditor() {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [isNotebookDialogOpen, setIsNotebookDialogOpen] = useState(false);
+  const [isVoiceRecorderOpen, setIsVoiceRecorderOpen] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -135,6 +137,15 @@ export default function NoteEditor() {
     setIsNotebookDialogOpen(true);
   };
 
+  const handleTranscriptionComplete = (transcribedText: string) => {
+    const updatedContent = note.content 
+      ? `${note.content}\n\n${transcribedText}`
+      : transcribedText;
+    
+    handleChange("content", updatedContent);
+    setIsVoiceRecorderOpen(false);
+  };
+
   return (
     <div className="min-h-screen pb-20">
       <header className="sticky top-0 z-10 bg-background border-b border-border">
@@ -144,6 +155,14 @@ export default function NoteEditor() {
           </Button>
           
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsVoiceRecorderOpen(true)}
+            >
+              <Mic className="h-4 w-4" />
+            </Button>
+            
             {lastSaved && (
               <span className="text-xs text-muted-foreground">
                 Saved at {lastSaved}
@@ -209,6 +228,17 @@ export default function NoteEditor() {
             >
               Go to Notebooks
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isVoiceRecorderOpen} onOpenChange={setIsVoiceRecorderOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Voice Recorder</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <VoiceRecorder onTranscriptionComplete={handleTranscriptionComplete} />
           </div>
         </DialogContent>
       </Dialog>

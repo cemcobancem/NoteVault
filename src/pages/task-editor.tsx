@@ -10,7 +10,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { db } from "@/lib/db";
 import { Task, Priority } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { Save, ArrowLeft } from "lucide-react";
+import { Save, ArrowLeft, Mic } from "lucide-react";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog";
+import { VoiceRecorder } from "@/components/ui/voice-recorder";
 
 export default function TaskEditor() {
   const { id } = useParams();
@@ -27,6 +34,7 @@ export default function TaskEditor() {
     updatedAt: new Date(),
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [isVoiceRecorderOpen, setIsVoiceRecorderOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -107,6 +115,15 @@ export default function TaskEditor() {
     navigate("/tasks");
   };
 
+  const handleTranscriptionComplete = (transcribedText: string) => {
+    const updatedDescription = task.description 
+      ? `${task.description}\n\n${transcribedText}`
+      : transcribedText;
+    
+    handleChange("description", updatedDescription);
+    setIsVoiceRecorderOpen(false);
+  };
+
   return (
     <div className="min-h-screen pb-20">
       <header className="sticky top-0 z-10 bg-background border-b border-border">
@@ -115,13 +132,23 @@ export default function TaskEditor() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           
-          <Button
-            onClick={handleSave}
-            disabled={isSaving}
-          >
-            <Save className="mr-2 h-4 w-4" />
-            Save
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsVoiceRecorderOpen(true)}
+            >
+              <Mic className="h-4 w-4" />
+            </Button>
+            
+            <Button
+              onClick={handleSave}
+              disabled={isSaving}
+            >
+              <Save className="mr-2 h-4 w-4" />
+              Save
+            </Button>
+          </div>
         </div>
       </header>
       
@@ -191,6 +218,17 @@ export default function TaskEditor() {
           />
         </div>
       </div>
+      
+      <Dialog open={isVoiceRecorderOpen} onOpenChange={setIsVoiceRecorderOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Voice Recorder</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <VoiceRecorder onTranscriptionComplete={handleTranscriptionComplete} />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
