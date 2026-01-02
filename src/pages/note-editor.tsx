@@ -189,7 +189,7 @@ export default function NoteEditor() {
         />
         
         <NotebookSelector
-          value={note.notebookId}
+          value={note.notebookId || ""}
           onValueChange={(value) => handleChange("notebookId", value || undefined)}
           onCreateNew={handleCreateNotebook}
         />

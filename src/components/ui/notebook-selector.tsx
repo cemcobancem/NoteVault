@@ -56,12 +56,12 @@ export function NotebookSelector({ value, onValueChange, onCreateNew }: Notebook
           </Button>
         )}
       </div>
-      <Select value={value || ""} onValueChange={onValueChange}>
+      <Select value={value || "none"} onValueChange={(val) => onValueChange(val === "none" ? "" : val)}>
         <SelectTrigger>
           <SelectValue placeholder="Select a notebook" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">None</SelectItem>
+          <SelectItem value="none">None</SelectItem>
           {notebooks.map((notebook) => (
             <SelectItem key={notebook.id} value={notebook.id}>
               <div className="flex items-center">
