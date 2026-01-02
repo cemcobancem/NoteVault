@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Mic, Square, Play, Pause, RotateCcw, Upload } from "lucide-react";
+import { Mic, Square, Play, Pause, RotateCcw, Upload, FileAudio } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useVoiceRecorder } from "@/hooks/use-voice-recorder";
 import { TranscriptionService } from "@/lib/transcription";
@@ -124,91 +124,142 @@ export function VoiceRecorder({ onTranscriptionComplete }: VoiceRecorderProps) {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {isRecording ? (
-            <div className="flex items-center gap-2">
-              <div className="h-3 w-3 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-sm font-medium">Recording...</span>
-              <span className="text-sm text-muted-foreground">{formatTime(recordingTime)}</span>
+    <div className="space-y-6 p-4 bg-muted rounded-lg">
+      <div className="flex flex-col items-center justify-center py-4">
+        <div className="relative mb-4">
+          <div className={`w-24 h-24 rounded-full flex items-center justify-center ${
+            isRecording 
+              ? 'bg-red-500 animate-pulse' 
+              : audioBlob 
+                ? 'bg-primary' 
+                : 'bg-muted-foreground'
+          }`}>
+            {isRecording ? (
+              <div className="w-10 h-10 bg-white rounded"></div>
+            ) : audioBlob ? (
+              <FileAudio className="text-white w-10 h-10" />
+            ) : (
+              <Mic className="text-white w-10 h-10" />
+            )}
+          </div>
+          
+          {isRecording && (
+            <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
+              <div className="w-2 h-2 bg-white rounded-full"></div>
             </div>
-          ) : audioBlob ? (
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Audio ready</span>
-            </div>
-          ) : (
-            <span className="text-sm text-muted-foreground">Ready to record or upload</span>
           )}
+        </div>
+        
+        <div className="text-center">
+          <h3 className="font-semibold text-lg">
+            {isRecording ? "Recording..." : audioBlob ? "Audio Ready" : "Voice Recorder"}
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            {isRecording 
+              ? `Recording: ${formatTime(recordingTime)}` 
+              : audioBlob 
+                ? "Ready for transcription" 
+                : "Record or upload audio"}
+          </p>
         </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-col gap-3">
         {!isRecording ? (
           !audioBlob ? (
             <>
               <Button 
                 onClick={handleStartRecording}
-                className="flex-1"
+                className="w-full py-6 text-lg"
+                size="lg"
               >
-                <Mic className="h-4 w-4 mr-2" />
-                Record
+                <Mic className="h-5 w-5 mr-2" />
+                Start Recording
               </Button>
-              <Button 
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Upload className="h-4 w-4 mr-2" />
-                Upload
-              </Button>
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept="audio/*"
-                onChange={handleFileUpload}
-              />
+              
+              <div className="relative">
+                <Button 
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full py-6 text-lg"
+                  size="lg"
+                >
+                  <Upload className="h-5 w-5 mr-2" />
+                  Upload Audio File
+                </Button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="audio/*"
+                  onChange={handleFileUpload}
+                />
+              </div>
             </>
           ) : (
-            <>
+            <div className="flex flex-col gap-3">
               <Button 
                 onClick={handleTranscribe}
                 disabled={isProcessing}
-                className="flex-1"
+                className="w-full py-6 text-lg"
+                size="lg"
               >
                 {isProcessing ? (
-                  "Transcribing..."
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Transcribing...
+                  </>
                 ) : (
-                  "Transcribe"
+                  "Transcribe to Text"
                 )}
               </Button>
-            </>
+              
+              <Button 
+                onClick={handlePlayPause}
+                variant="outline"
+                className="w-full py-4"
+              >
+                {isPlaying ? (
+                  <>
+                    <Pause className="h-4 w-4 mr-2" />
+                    Pause
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4 mr-2" />
+                    Play Recording
+                  </>
+                )}
+              </Button>
+            </div>
           )
         ) : (
           <Button 
             onClick={handleStopRecording}
             variant="destructive"
-            className="flex-1"
+            className="w-full py-6 text-lg"
+            size="lg"
           >
-            <Square className="h-4 w-4 mr-2" />
+            <Square className="h-5 w-5 mr-2" />
             Stop Recording
           </Button>
         )}
         
-        {audioBlob && (
+        {(audioBlob || isRecording) && (
           <Button 
             onClick={handleReset}
-            variant="outline"
-            size="icon"
+            variant="ghost"
+            className="w-full py-4"
           >
-            <RotateCcw className="h-4 w-4" />
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Reset
           </Button>
         )}
       </div>
       
       {audioBlob && (
-        <div className="text-xs text-muted-foreground mt-2">
-          Audio file ready for transcription. Click "Transcribe" to convert speech to text.
+        <div className="text-center text-sm text-muted-foreground p-3 bg-background rounded-md">
+          <p>Your audio is ready for transcription. Click "Transcribe to Text" to convert speech to text.</p>
         </div>
       )}
     </div>

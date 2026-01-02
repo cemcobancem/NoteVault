@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { db } from "@/lib/db";
-import { Settings, Notebook } from "@/types";
+import { Settings } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, Download, Upload, Trash2 } from "lucide-react";
+import { AlertCircle, Download, Upload, Trash2, Palette, Database } from "lucide-react";
 import { format } from "date-fns";
 
 export default function SettingsPage() {
@@ -219,17 +219,21 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen pb-20">
+    <div className="min-h-screen pb-20 bg-background">
       <AppBar title="Settings" />
       
       <div className="container py-6 space-y-8">
-        <section>
-          <h2 className="text-xl font-semibold mb-4">Appearance</h2>
+        <section className="bg-card rounded-lg border p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <Palette className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-semibold">Appearance</h2>
+          </div>
+          
           <div className="space-y-4">
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="theme" className="text-base">Theme</Label>
               <Select value={theme} onValueChange={handleThemeChange}>
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full max-w-md">
                   <SelectValue placeholder="Select theme" />
                 </SelectTrigger>
                 <SelectContent>
@@ -238,20 +242,36 @@ export default function SettingsPage() {
                   <SelectItem value="dark">Dark</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-sm text-muted-foreground">
+                Choose how the app looks to you. Select a single theme, or sync with your system.
+              </p>
             </div>
           </div>
         </section>
         
-        <section>
-          <h2 className="text-xl font-semibold mb-4">Data Management</h2>
-          <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button onClick={handleExport} className="flex-1">
+        <section className="bg-card rounded-lg border p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <Database className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-semibold">Data Management</h2>
+          </div>
+          
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button 
+                onClick={handleExport} 
+                variant="outline"
+                className="flex-1"
+              >
                 <Download className="mr-2 h-4 w-4" />
                 Export Data
               </Button>
+              
               <div className="flex-1">
-                <Button className="w-full" asChild>
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  asChild
+                >
                   <label>
                     <Upload className="mr-2 h-4 w-4" />
                     Import Data
@@ -270,11 +290,11 @@ export default function SettingsPage() {
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Danger Zone</AlertTitle>
               <AlertDescription>
-                This will permanently delete all your notebooks, notes, and tasks.
+                This will permanently delete all your notebooks, notes, and tasks. This action cannot be undone.
               </AlertDescription>
               <Button
                 variant="destructive"
-                className="mt-2"
+                className="mt-3"
                 onClick={handleClearData}
               >
                 <Trash2 className="mr-2 h-4 w-4" />

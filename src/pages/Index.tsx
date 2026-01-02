@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Plus, Pin, BookOpen } from "lucide-react";
+import { Plus, Pin, BookOpen, FileText } from "lucide-react";
 import { AppBar } from "@/components/ui/app-bar";
 import { Fab } from "@/components/ui/fab";
 import { NoteCard } from "@/components/note-card";
@@ -9,7 +9,6 @@ import { db } from "@/lib/db";
 import { Note, Notebook } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { seedDemoData } from "@/lib/seed";
-import { NotebookBadge } from "@/components/ui/notebook-badge";
 
 export default function NotesPage() {
   const { notebookId } = useParams();
@@ -23,14 +22,12 @@ export default function NotesPage() {
   const fetchNotes = async () => {
     try {
       let allNotes: Note[] = [];
-      
       if (notebookId) {
         // Fetch notebook details
         const notebookData = await db.notebooks.get(notebookId);
         if (notebookData) {
           setNotebook(notebookData);
         }
-        
         // Fetch notes for this notebook
         allNotes = await db.notes
           .where("notebookId")
@@ -47,7 +44,6 @@ export default function NotesPage() {
       
       const pinned = allNotes.filter(note => note.pinned);
       const others = allNotes.filter(note => !note.pinned);
-      
       setNotes(allNotes);
       setPinnedNotes(pinned);
       setOtherNotes(others);
@@ -74,7 +70,6 @@ export default function NotesPage() {
 
   const handleDelete = async (note: Note) => {
     if (!note.id) return;
-    
     try {
       await db.notes.delete(note.id);
       toast({
@@ -94,7 +89,6 @@ export default function NotesPage() {
 
   const handlePin = async (note: Note) => {
     if (!note.id) return;
-    
     try {
       await db.notes.update(note.id, {
         pinned: !note.pinned,
@@ -113,7 +107,6 @@ export default function NotesPage() {
 
   const handleArchive = async (note: Note) => {
     if (!note.id) return;
-    
     try {
       await db.notes.update(note.id, {
         archived: !note.archived,
@@ -131,18 +124,23 @@ export default function NotesPage() {
   };
 
   return (
-    <div className="min-h-screen pb-20">
-      <AppBar 
-        title={notebook ? notebook.name : "All Notes"} 
-        showMenu={!notebookId}
-      />
+    <div className="min-h-screen pb-20 bg-background">
+      <AppBar title={notebook ? notebook.name : "All Notes"} showMenu={!notebookId} />
       
       <div className="container py-4 space-y-6">
         {notebook && (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5" />
-              <h1 className="text-xl font-bold">{notebook.name}</h1>
+          <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+            <div className="flex items-center gap-3">
+              <div 
+                className="w-4 h-4 rounded-full" 
+                style={{ backgroundColor: notebook.color }}
+              />
+              <div>
+                <h1 className="text-xl font-bold">{notebook.name}</h1>
+                <p className="text-sm text-muted-foreground">
+                  {otherNotes.length + pinnedNotes.length} {otherNotes.length + pinnedNotes.length === 1 ? 'note' : 'notes'}
+                </p>
+              </div>
             </div>
             <Button 
               variant="ghost" 
@@ -157,18 +155,21 @@ export default function NotesPage() {
         {pinnedNotes.length > 0 && (
           <section>
             <div className="flex items-center gap-2 mb-3">
-              <Pin className="h-4 w-4 text-primary" />
-              <h2 className="text-lg font-semibold">Pinned</h2>
+              <Pin className="h-4 w-4 text-primary" fill="currentColor" />
+              <h2 className="text-lg font-semibold">Pinned Notes</h2>
+              <span className="text-sm text-muted-foreground">
+                ({pinnedNotes.length})
+              </span>
             </div>
             <div className="grid gap-4">
               {pinnedNotes.map((note) => (
-                <NoteCard
-                  key={note.id}
-                  note={note}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  onPin={handlePin}
-                  onArchive={handleArchive}
+                <NoteCard 
+                  key={note.id} 
+                  note={note} 
+                  onEdit={handleEdit} 
+                  onDelete={handleDelete} 
+                  onPin={handlePin} 
+                  onArchive={handleArchive} 
                 />
               ))}
             </div>
@@ -182,31 +183,42 @@ export default function NotesPage() {
             </h2>
             {otherNotes.length > 0 && (
               <span className="text-sm text-muted-foreground">
-                {otherNotes.length} notes
+                {otherNotes.length} {otherNotes.length === 1 ? 'note' : 'notes'}
               </span>
             )}
           </div>
           
           {otherNotes.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground mb-4">
-                {notebook ? "No notes in this notebook yet" : "No notes yet"}
+            <div className="flex flex-col items-center justify-center py-12 text-center rounded-lg border border-dashed">
+              <div className="bg-muted p-5 rounded-full mb-4">
+                <FileText className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">
+                {notebook ? "No notes in this notebook" : "No notes yet"}
+              </h3>
+              <p className="text-muted-foreground mb-6 max-w-md">
+                {notebook 
+                  ? "Create your first note in this notebook to get started." 
+                  : "Create your first note to start capturing your thoughts."}
               </p>
-              <Button onClick={() => navigate("/notes/new")}>
+              <Button 
+                onClick={() => navigate("/notes/new")}
+                size="lg"
+              >
                 <Plus className="mr-2 h-4 w-4" />
-                Create your first note
+                Create Note
               </Button>
             </div>
           ) : (
             <div className="grid gap-4">
               {otherNotes.map((note) => (
-                <NoteCard
-                  key={note.id}
-                  note={note}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  onPin={handlePin}
-                  onArchive={handleArchive}
+                <NoteCard 
+                  key={note.id} 
+                  note={note} 
+                  onEdit={handleEdit} 
+                  onDelete={handleDelete} 
+                  onPin={handlePin} 
+                  onArchive={handleArchive} 
                 />
               ))}
             </div>

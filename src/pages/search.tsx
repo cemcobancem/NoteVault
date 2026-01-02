@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, FileText, CheckSquare, BookOpen } from "lucide-react";
+import { Search, FileText, CheckSquare } from "lucide-react";
 import { AppBar } from "@/components/ui/app-bar";
 import { Input } from "@/components/ui/input";
 import { NoteCard } from "@/components/note-card";
@@ -9,7 +9,6 @@ import { db } from "@/lib/db";
 import { Note, Task } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { NotebookBadge } from "@/components/ui/notebook-badge";
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");
@@ -26,7 +25,6 @@ export default function SearchPage() {
         .orderBy("updatedAt")
         .reverse()
         .toArray();
-      
       const allTasks = await db.tasks
         .orderBy("updatedAt")
         .reverse()
@@ -56,9 +54,8 @@ export default function SearchPage() {
       setFilteredTasks(tasks);
       return;
     }
-
-    const lowerQuery = query.toLowerCase();
     
+    const lowerQuery = query.toLowerCase();
     const filteredNotes = notes.filter(
       (note) =>
         note.title.toLowerCase().includes(lowerQuery) ||
@@ -83,7 +80,6 @@ export default function SearchPage() {
 
   const handleNoteDelete = async (note: Note) => {
     if (!note.id) return;
-    
     try {
       await db.notes.delete(note.id);
       toast({
@@ -103,7 +99,6 @@ export default function SearchPage() {
 
   const handleNotePin = async (note: Note) => {
     if (!note.id) return;
-    
     try {
       await db.notes.update(note.id, {
         pinned: !note.pinned,
@@ -122,7 +117,6 @@ export default function SearchPage() {
 
   const handleNoteArchive = async (note: Note) => {
     if (!note.id) return;
-    
     try {
       await db.notes.update(note.id, {
         archived: !note.archived,
@@ -145,7 +139,6 @@ export default function SearchPage() {
 
   const handleTaskDelete = async (task: Task) => {
     if (!task.id) return;
-    
     try {
       await db.tasks.delete(task.id);
       toast({
@@ -165,7 +158,6 @@ export default function SearchPage() {
 
   const handleTaskComplete = async (task: Task) => {
     if (!task.id) return;
-    
     try {
       await db.tasks.update(task.id, {
         status: task.status === "done" ? "open" : "done",
@@ -183,7 +175,7 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="min-h-screen pb-20">
+    <div className="min-h-screen pb-20 bg-background">
       <AppBar title="Search" showSearch={false} />
       
       <div className="container py-4">
@@ -191,15 +183,15 @@ export default function SearchPage() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search notes and tasks..."
-            className="pl-10"
+            className="pl-10 py-6 text-base"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
         
         <Tabs defaultValue="notes" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="notes" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="notes" className="flex items-center gap-2 py-3">
               <FileText className="h-4 w-4" />
               Notes
               {filteredNotes.length > 0 && (
@@ -208,7 +200,7 @@ export default function SearchPage() {
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="tasks" className="flex items-center gap-2">
+            <TabsTrigger value="tasks" className="flex items-center gap-2 py-3">
               <CheckSquare className="h-4 w-4" />
               Tasks
               {filteredTasks.length > 0 && (
@@ -219,11 +211,19 @@ export default function SearchPage() {
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="notes" className="mt-4">
+          <TabsContent value="notes" className="mt-0">
             {filteredNotes.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">
+              <div className="flex flex-col items-center justify-center py-12 text-center rounded-lg border border-dashed">
+                <div className="bg-muted p-5 rounded-full mb-4">
+                  <FileText className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">
                   {query ? "No notes match your search" : "No notes found"}
+                </h3>
+                <p className="text-muted-foreground max-w-md">
+                  {query 
+                    ? "Try different search terms to find what you're looking for." 
+                    : "Create your first note to get started."}
                 </p>
               </div>
             ) : (
@@ -242,11 +242,19 @@ export default function SearchPage() {
             )}
           </TabsContent>
           
-          <TabsContent value="tasks" className="mt-4">
+          <TabsContent value="tasks" className="mt-0">
             {filteredTasks.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">
+              <div className="flex flex-col items-center justify-center py-12 text-center rounded-lg border border-dashed">
+                <div className="bg-muted p-5 rounded-full mb-4">
+                  <CheckSquare className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">
                   {query ? "No tasks match your search" : "No tasks found"}
+                </h3>
+                <p className="text-muted-foreground max-w-md">
+                  {query 
+                    ? "Try different search terms to find what you're looking for." 
+                    : "Create your first task to get started."}
                 </p>
               </div>
             ) : (

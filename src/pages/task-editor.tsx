@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { db } from "@/lib/db";
 import { Task, Priority } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { Save, ArrowLeft, Mic } from "lucide-react";
+import { Save, ArrowLeft, Mic, Calendar, Flag } from "lucide-react";
 import { 
   Dialog, 
   DialogContent, 
@@ -125,10 +125,15 @@ export default function TaskEditor() {
   };
 
   return (
-    <div className="min-h-screen pb-20">
+    <div className="min-h-screen pb-20 bg-background">
       <header className="sticky top-0 z-10 bg-background border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
-          <Button variant="ghost" size="icon" onClick={handleBack}>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handleBack}
+            className="rounded-full"
+          >
             <ArrowLeft className="h-5 w-5" />
           </Button>
           
@@ -137,13 +142,15 @@ export default function TaskEditor() {
               variant="ghost"
               size="icon"
               onClick={() => setIsVoiceRecorderOpen(true)}
+              className="rounded-full"
             >
-              <Mic className="h-4 w-4" />
+              <Mic className="h-5 w-5" />
             </Button>
             
             <Button
               onClick={handleSave}
               disabled={isSaving}
+              className="rounded-full"
             >
               <Save className="mr-2 h-4 w-4" />
               Save
@@ -157,27 +164,40 @@ export default function TaskEditor() {
           placeholder="Task title"
           value={task.title}
           onChange={(e) => handleChange("title", e.target.value)}
-          className="text-2xl font-bold border-none px-0 focus-visible:ring-0"
+          className="text-3xl font-bold border-none px-0 focus-visible:ring-0 placeholder:text-2xl placeholder:font-normal"
         />
         
-        <Textarea
-          placeholder="Description (optional)"
-          value={task.description || ""}
-          onChange={(e) => handleChange("description", e.target.value)}
-          className="min-h-[100px] border-none px-0 focus-visible:ring-0 text-base"
-        />
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Flag className="h-4 w-4" />
+          <span>
+            Created {task.createdAt.toLocaleDateString()}
+          </span>
+        </div>
         
-        <div>
-          <Label className="text-sm font-medium mb-2 block">Due Date</Label>
-          <DatePicker
-            date={task.dueDate || undefined}
-            onDateChange={(date) => handleChange("dueDate", date)}
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Description</Label>
+          <Textarea
+            placeholder="Add details about your task..."
+            value={task.description || ""}
+            onChange={(e) => handleChange("description", e.target.value)}
+            className="min-h-[150px] text-base border-none px-0 focus-visible:ring-0 resize-none"
           />
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <Label className="text-sm font-medium mb-2 block">Priority</Label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label className="text-sm font-medium flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Due Date
+            </Label>
+            <DatePicker
+              date={task.dueDate || undefined}
+              onDateChange={(date) => handleChange("dueDate", date)}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Priority</Label>
             <Select
               value={task.priority}
               onValueChange={(value) => handleChange("priority", value as Priority)}
@@ -192,26 +212,10 @@ export default function TaskEditor() {
               </SelectContent>
             </Select>
           </div>
-          
-          <div>
-            <Label className="text-sm font-medium mb-2 block">Status</Label>
-            <Select
-              value={task.status}
-              onValueChange={(value) => handleChange("status", value as "open" | "done")}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="open">Open</SelectItem>
-                <SelectItem value="done">Done</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
         </div>
         
-        <div>
-          <Label className="text-sm font-medium mb-2 block">Tags</Label>
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Tags</Label>
           <TagInput
             tags={task.tags}
             onChange={(tags) => handleChange("tags", tags)}
@@ -220,11 +224,11 @@ export default function TaskEditor() {
       </div>
       
       <Dialog open={isVoiceRecorderOpen} onOpenChange={setIsVoiceRecorderOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Voice Recorder</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
+          <div className="py-2">
             <VoiceRecorder onTranscriptionComplete={handleTranscriptionComplete} />
           </div>
         </DialogContent>

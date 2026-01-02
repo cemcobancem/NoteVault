@@ -7,7 +7,7 @@ import { TagInput } from "@/components/ui/tag-input";
 import { db } from "@/lib/db";
 import { Note } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { Save, ArrowLeft, Mic } from "lucide-react";
+import { Save, ArrowLeft, Mic, FileText } from "lucide-react";
 import { NotebookSelector } from "@/components/ui/notebook-selector";
 import { 
   Dialog, 
@@ -147,10 +147,15 @@ export default function NoteEditor() {
   };
 
   return (
-    <div className="min-h-screen pb-20">
+    <div className="min-h-screen pb-20 bg-background">
       <header className="sticky top-0 z-10 bg-background border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
-          <Button variant="ghost" size="icon" onClick={handleBack}>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handleBack}
+            className="rounded-full"
+          >
             <ArrowLeft className="h-5 w-5" />
           </Button>
           
@@ -159,20 +164,17 @@ export default function NoteEditor() {
               variant="ghost"
               size="icon"
               onClick={() => setIsVoiceRecorderOpen(true)}
+              className="rounded-full"
             >
-              <Mic className="h-4 w-4" />
+              <Mic className="h-5 w-5" />
             </Button>
             
-            {lastSaved && (
-              <span className="text-xs text-muted-foreground">
-                Saved at {lastSaved}
-              </span>
-            )}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => handleSave()}
               disabled={isSaving}
+              className="rounded-full"
             >
               <Save className="h-4 w-4" />
             </Button>
@@ -185,8 +187,17 @@ export default function NoteEditor() {
           placeholder="Note title"
           value={note.title}
           onChange={(e) => handleChange("title", e.target.value)}
-          className="text-2xl font-bold border-none px-0 focus-visible:ring-0"
+          className="text-3xl font-bold border-none px-0 focus-visible:ring-0 placeholder:text-2xl placeholder:font-normal"
         />
+        
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <FileText className="h-4 w-4" />
+          <span>
+            {lastSaved 
+              ? `Saved at ${lastSaved}` 
+              : note.createdAt.toLocaleDateString()}
+          </span>
+        </div>
         
         <NotebookSelector
           value={note.notebookId || ""}
@@ -195,14 +206,14 @@ export default function NoteEditor() {
         />
         
         <Textarea
-          placeholder="Start writing..."
+          placeholder="Start writing your note..."
           value={note.content}
           onChange={(e) => handleChange("content", e.target.value)}
-          className="min-h-[50vh] border-none px-0 focus-visible:ring-0 text-base"
+          className="min-h-[60vh] text-base border-none px-0 focus-visible:ring-0 resize-none"
         />
         
-        <div>
-          <label className="text-sm font-medium mb-2 block">Tags</label>
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Tags</Label>
           <TagInput
             tags={note.tags}
             onChange={(tags) => handleChange("tags", tags)}
@@ -211,16 +222,16 @@ export default function NoteEditor() {
       </div>
       
       <Dialog open={isNotebookDialogOpen} onOpenChange={setIsNotebookDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Create New Notebook</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
+          <div className="py-4 space-y-4">
             <p className="text-muted-foreground">
               To create a new notebook, please go to the Notebooks section.
             </p>
             <Button 
-              className="mt-4 w-full"
+              className="w-full"
               onClick={() => {
                 setIsNotebookDialogOpen(false);
                 navigate("/notebooks");
@@ -233,11 +244,11 @@ export default function NoteEditor() {
       </Dialog>
       
       <Dialog open={isVoiceRecorderOpen} onOpenChange={setIsVoiceRecorderOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Voice Recorder</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
+          <div className="py-2">
             <VoiceRecorder onTranscriptionComplete={handleTranscriptionComplete} />
           </div>
         </DialogContent>
