@@ -5,6 +5,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import NotesPage from "./pages/Index";
+import TasksPage from "./pages/tasks";
+import SearchPage from "./pages/search";
+import SettingsPage from "./pages/settings";
+import NoteEditor from "./pages/note-editor";
+import TaskEditor from "./pages/task-editor";
+import { BottomNav } from "./components/ui/bottom-nav";
 
 const queryClient = new QueryClient();
 
@@ -15,10 +22,18 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<NotesPage />} />
+          <Route path="/tasks" element={<TasksPage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/notes/new" element={<NoteEditor />} />
+          <Route path="/notes/:id" element={<NoteEditor />} />
+          <Route path="/tasks/new" element={<TaskEditor />} />
+          <Route path="/tasks/:id" element={<TaskEditor />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <BottomNav />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
