@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Mic, Square, Play, Pause, RotateCcw } from "lucide-react";
+import { Mic, Square, Play, Pause, RotateCcw, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useVoiceRecorder } from "@/hooks/use-voice-recorder";
+import { TranscriptionService } from "@/lib/transcription";
 
 interface VoiceRecorderProps {
   onTranscriptionComplete: (text: string) => void;
@@ -22,7 +23,22 @@ export function VoiceRecorder({ onTranscriptionComplete }: VoiceRecorderProps) {
   } = useVoiceRecorder();
   
   const [isProcessing, setIsProcessing] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const audioBlobRef = useRef<Blob | null>(null);
+
+  // Update audio blob when audioUrl changes
+  useEffect(() => {
+    if (audioUrl) {
+      fetch(audioUrl)
+        .then(response => response.blob())
+        .then(blob => {
+          setAudioBlob(blob);
+          audioBlobRef.current = blob;
+        });
+    }
+  }, [audioUrl]);
 
   const handleStartRecording = async () => {
     try {
@@ -49,19 +65,14 @@ export function VoiceRecorder({ onTranscriptionComplete }: VoiceRecorderProps) {
   };
 
   const handleTranscribe = async () => {
-    if (!audioUrl) return;
+    if (!audioBlobRef.current) return;
     
     setIsProcessing(true);
     
     try {
-      // In a real implementation, you would send the audio to a transcription service
-      // For this demo, we'll simulate transcription with a delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const result = await TranscriptionService.transcribe(audioBlobRef.current);
       
-      // Simulated transcription result
-      const simulatedTranscription = "This is a simulated transcription of your voice recording. In a real implementation, this would be the actual transcribed text from your audio.";
-      
-      onTranscriptionComplete(simulatedTranscription);
+      onTranscriptionComplete(result.text);
       toast({
         title: "Transcription Complete",
         description: "Your voice recording has been transcribed",
@@ -80,6 +91,30 @@ export function VoiceRecorder({ onTranscriptionComplete }: VoiceRecorderProps) {
 
   const handleReset = () => {
     resetRecording();
+    setAudioBlob(null);
+    audioBlobRef.current = null;
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type.startsWith('audio/')) {
+      setAudioBlob(file);
+      audioBlobRef.current = file;
+      toast({
+        title: "File Uploaded",
+        description: "Audio file ready for transcription",
+      });
+    } else {
+      toast({
+        title: "Invalid File",
+        description: "Please select a valid audio file",
+        variant: "destructive",
+      });
+    }
+    // Reset input value to allow uploading the same file again
+    if (event.target) {
+      event.target.value = '';
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -98,46 +133,44 @@ export function VoiceRecorder({ onTranscriptionComplete }: VoiceRecorderProps) {
               <span className="text-sm font-medium">Recording...</span>
               <span className="text-sm text-muted-foreground">{formatTime(recordingTime)}</span>
             </div>
-          ) : audioUrl ? (
+          ) : audioBlob ? (
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Recording saved</span>
-              <span className="text-sm text-muted-foreground">{formatTime(recordingTime)}</span>
+              <span className="text-sm font-medium">Audio ready</span>
             </div>
           ) : (
-            <span className="text-sm text-muted-foreground">Ready to record</span>
+            <span className="text-sm text-muted-foreground">Ready to record or upload</span>
           )}
         </div>
       </div>
 
       <div className="flex gap-2">
         {!isRecording ? (
-          !audioUrl ? (
-            <Button 
-              onClick={handleStartRecording}
-              className="flex-1"
-            >
-              <Mic className="h-4 w-4 mr-2" />
-              Start Recording
-            </Button>
-          ) : (
+          !audioBlob ? (
             <>
               <Button 
-                onClick={handlePlayPause}
-                variant="outline"
+                onClick={handleStartRecording}
                 className="flex-1"
               >
-                {isPlaying ? (
-                  <>
-                    <Pause className="h-4 w-4 mr-2" />
-                    Pause
-                  </>
-                ) : (
-                  <>
-                    <Play className="h-4 w-4 mr-2" />
-                    Play
-                  </>
-                )}
+                <Mic className="h-4 w-4 mr-2" />
+                Record
               </Button>
+              <Button 
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Upload
+              </Button>
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="audio/*"
+                onChange={handleFileUpload}
+              />
+            </>
+          ) : (
+            <>
               <Button 
                 onClick={handleTranscribe}
                 disabled={isProcessing}
@@ -162,7 +195,7 @@ export function VoiceRecorder({ onTranscriptionComplete }: VoiceRecorderProps) {
           </Button>
         )}
         
-        {audioUrl && (
+        {audioBlob && (
           <Button 
             onClick={handleReset}
             variant="outline"
@@ -172,6 +205,12 @@ export function VoiceRecorder({ onTranscriptionComplete }: VoiceRecorderProps) {
           </Button>
         )}
       </div>
+      
+      {audioBlob && (
+        <div className="text-xs text-muted-foreground mt-2">
+          Audio file ready for transcription. Click "Transcribe" to convert speech to text.
+        </div>
+      )}
     </div>
   );
 }
