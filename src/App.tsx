@@ -11,6 +11,7 @@ import SearchPage from "./pages/search";
 import SettingsPage from "./pages/settings";
 import NoteEditor from "./pages/note-editor";
 import TaskEditor from "./pages/task-editor";
+import NotebooksPage from "./pages/notebooks";
 import { BottomNav } from "./components/ui/bottom-nav";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,8 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<NotesPage />} />
+          <Route path="/notebooks/:notebookId" element={<NotesPage />} />
+          <Route path="/notebooks" element={<NotebooksPage />} />
           <Route path="/tasks" element={<TasksPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/settings" element={<SettingsPage />} />

@@ -1,9 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pin, Archive, Edit, Trash2 } from "lucide-react";
+import { Pin, Archive, Edit, Trash2, BookOpen } from "lucide-react";
 import { Note } from "@/types";
 import { format } from "date-fns";
+import { db } from "@/lib/db";
+import { useEffect, useState } from "react";
+import { NotebookBadge } from "@/components/ui/notebook-badge";
 
 interface NoteCardProps {
   note: Note;
@@ -14,6 +17,25 @@ interface NoteCardProps {
 }
 
 export function NoteCard({ note, onEdit, onDelete, onPin, onArchive }: NoteCardProps) {
+  const [notebook, setNotebook] = useState<{name: string, color: string} | null>(null);
+
+  const fetchNotebook = async () => {
+    if (note.notebookId) {
+      try {
+        const notebookData = await db.notebooks.get(note.notebookId);
+        if (notebookData) {
+          setNotebook({name: notebookData.name, color: notebookData.color});
+        }
+      } catch (error) {
+        console.error("Failed to fetch notebook:", error);
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchNotebook();
+  }, [note.notebookId]);
+
   return (
     <Card className="relative">
       {note.pinned && (
@@ -26,6 +48,15 @@ export function NoteCard({ note, onEdit, onDelete, onPin, onArchive }: NoteCardP
         <div className="flex justify-between items-start">
           <CardTitle className="text-lg line-clamp-2">{note.title}</CardTitle>
         </div>
+        {notebook && (
+          <div className="mt-1">
+            <NotebookBadge 
+              name={notebook.name} 
+              color={notebook.color} 
+              className="text-xs"
+            />
+          </div>
+        )}
         <p className="text-xs text-muted-foreground">
           {format(new Date(note.updatedAt), "MMM d, yyyy h:mm a")}
         </p>

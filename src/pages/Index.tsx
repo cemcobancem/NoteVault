@@ -1,31 +1,52 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Plus, Pin } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
+import { Plus, Pin, BookOpen } from "lucide-react";
 import { AppBar } from "@/components/ui/app-bar";
 import { Fab } from "@/components/ui/fab";
 import { NoteCard } from "@/components/note-card";
 import { Button } from "@/components/ui/button";
 import { db } from "@/lib/db";
-import { Note } from "@/types";
+import { Note, Notebook } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { seedDemoData } from "@/lib/seed";
+import { NotebookBadge } from "@/components/ui/notebook-badge";
 
 export default function NotesPage() {
+  const { notebookId } = useParams();
   const [notes, setNotes] = useState<Note[]>([]);
   const [pinnedNotes, setPinnedNotes] = useState<Note[]>([]);
   const [otherNotes, setOtherNotes] = useState<Note[]>([]);
+  const [notebook, setNotebook] = useState<Notebook | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const fetchNotes = async () => {
     try {
-      const allNotes = await db.notes
-        .orderBy("updatedAt")
-        .reverse()
-        .toArray();
+      let allNotes: Note[] = [];
       
-      const pinned = allNotes.filter(note => note.pinned && !note.archived);
-      const others = allNotes.filter(note => !note.pinned && !note.archived);
+      if (notebookId) {
+        // Fetch notebook details
+        const notebookData = await db.notebooks.get(notebookId);
+        if (notebookData) {
+          setNotebook(notebookData);
+        }
+        
+        // Fetch notes for this notebook
+        allNotes = await db.notes
+          .where("notebookId")
+          .equals(notebookId)
+          .and(note => !note.archived)
+          .toArray();
+      } else {
+        // Fetch all notes (not archived)
+        allNotes = await db.notes
+          .where("archived")
+          .equals(false)
+          .toArray();
+      }
+      
+      const pinned = allNotes.filter(note => note.pinned);
+      const others = allNotes.filter(note => !note.pinned);
       
       setNotes(allNotes);
       setPinnedNotes(pinned);
@@ -42,8 +63,10 @@ export default function NotesPage() {
 
   useEffect(() => {
     fetchNotes();
-    seedDemoData();
-  }, []);
+    if (!notebookId) {
+      seedDemoData();
+    }
+  }, [notebookId]);
 
   const handleEdit = (note: Note) => {
     navigate(`/notes/${note.id}`);
@@ -109,9 +132,28 @@ export default function NotesPage() {
 
   return (
     <div className="min-h-screen pb-20">
-      <AppBar title="Notes" />
+      <AppBar 
+        title={notebook ? notebook.name : "All Notes"} 
+        showMenu={!notebookId}
+      />
       
       <div className="container py-4 space-y-6">
+        {notebook && (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5" />
+              <h1 className="text-xl font-bold">{notebook.name}</h1>
+            </div>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => navigate("/")}
+            >
+              Back to All Notes
+            </Button>
+          </div>
+        )}
+        
         {pinnedNotes.length > 0 && (
           <section>
             <div className="flex items-center gap-2 mb-3">
@@ -135,7 +177,9 @@ export default function NotesPage() {
         
         <section>
           <div className="flex justify-between items-center mb-3">
-            <h2 className="text-lg font-semibold">All Notes</h2>
+            <h2 className="text-lg font-semibold">
+              {notebook ? "Notes" : "All Notes"}
+            </h2>
             {otherNotes.length > 0 && (
               <span className="text-sm text-muted-foreground">
                 {otherNotes.length} notes
@@ -145,7 +189,9 @@ export default function NotesPage() {
           
           {otherNotes.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground mb-4">No notes yet</p>
+              <p className="text-muted-foreground mb-4">
+                {notebook ? "No notes in this notebook yet" : "No notes yet"}
+              </p>
               <Button onClick={() => navigate("/notes/new")}>
                 <Plus className="mr-2 h-4 w-4" />
                 Create your first note

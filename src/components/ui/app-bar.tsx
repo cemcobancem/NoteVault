@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Menu, Search } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface AppBarProps {
   title: string;
@@ -11,6 +11,7 @@ interface AppBarProps {
 
 export function AppBar({ title, showMenu = true, showSearch = true, onMenuClick }: AppBarProps) {
   const navigate = useNavigate();
+  const location = useLocation();
 
   return (
     <header className="sticky top-0 z-10 bg-background border-b border-border">

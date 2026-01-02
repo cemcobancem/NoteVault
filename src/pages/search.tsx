@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, FileText, CheckSquare } from "lucide-react";
+import { Search, FileText, CheckSquare, BookOpen } from "lucide-react";
 import { AppBar } from "@/components/ui/app-bar";
 import { Input } from "@/components/ui/input";
 import { NoteCard } from "@/components/note-card";
@@ -9,6 +9,7 @@ import { db } from "@/lib/db";
 import { Note, Task } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { NotebookBadge } from "@/components/ui/notebook-badge";
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");

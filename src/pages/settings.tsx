@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { db } from "@/lib/db";
-import { Settings } from "@/types";
+import { Settings, Notebook } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Download, Upload, Trash2 } from "lucide-react";
@@ -75,11 +75,13 @@ export default function SettingsPage() {
 
   const handleExport = async () => {
     try {
+      const notebooks = await db.notebooks.toArray();
       const notes = await db.notes.toArray();
       const tasks = await db.tasks.toArray();
       const settings = await db.settings.toArray();
       
       const exportData = {
+        notebooks,
         notes,
         tasks,
         settings,
@@ -115,6 +117,21 @@ export default function SettingsPage() {
     try {
       const fileText = await file.text();
       const importData = JSON.parse(fileText);
+      
+      // Import notebooks
+      if (importData.notebooks?.length) {
+        for (const notebook of importData.notebooks) {
+          const existing = await db.notebooks.get(notebook.id);
+          if (existing) {
+            // Update if newer
+            if (new Date(notebook.updatedAt) > new Date(existing.updatedAt)) {
+              await db.notebooks.update(notebook.id, notebook);
+            }
+          } else {
+            await db.notebooks.add(notebook);
+          }
+        }
+      }
       
       // Import notes
       if (importData.notes?.length) {
@@ -181,6 +198,7 @@ export default function SettingsPage() {
     }
     
     try {
+      await db.notebooks.clear();
       await db.notes.clear();
       await db.tasks.clear();
       
@@ -252,7 +270,7 @@ export default function SettingsPage() {
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Danger Zone</AlertTitle>
               <AlertDescription>
-                This will permanently delete all your notes and tasks.
+                This will permanently delete all your notebooks, notes, and tasks.
               </AlertDescription>
               <Button
                 variant="destructive"

@@ -1,6 +1,14 @@
 export type Priority = "low" | "medium" | "high";
 export type Status = "open" | "done";
 
+export interface Notebook {
+  id: string;
+  name: string;
+  color: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface Note {
   id?: string;
   title: string;
@@ -10,6 +18,7 @@ export interface Note {
   updatedAt: Date;
   pinned: boolean;
   archived: boolean;
+  notebookId?: string;
 }
 
 export interface Task {
@@ -31,6 +40,7 @@ export interface Settings {
 }
 
 export interface ExportData {
+  notebooks: Notebook[];
   notes: Note[];
   tasks: Task[];
   settings: Settings[];

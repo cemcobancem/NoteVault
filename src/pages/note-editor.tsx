@@ -8,6 +8,14 @@ import { db } from "@/lib/db";
 import { Note } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { Save, ArrowLeft } from "lucide-react";
+import { NotebookSelector } from "@/components/ui/notebook-selector";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 export default function NoteEditor() {
   const { id } = useParams();
@@ -21,9 +29,11 @@ export default function NoteEditor() {
     updatedAt: new Date(),
     pinned: false,
     archived: false,
+    notebookId: undefined,
   });
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
+  const [isNotebookDialogOpen, setIsNotebookDialogOpen] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -44,6 +54,7 @@ export default function NoteEditor() {
           updatedAt: existingNote.updatedAt,
           pinned: existingNote.pinned,
           archived: existingNote.archived,
+          notebookId: existingNote.notebookId,
         });
       }
     } catch (error) {
@@ -111,7 +122,17 @@ export default function NoteEditor() {
       clearTimeout(saveTimeoutRef.current);
       handleSave();
     }
-    navigate("/");
+    
+    // Navigate back to the notebook or to all notes
+    if (note.notebookId) {
+      navigate(`/notebooks/${note.notebookId}`);
+    } else {
+      navigate("/");
+    }
+  };
+
+  const handleCreateNotebook = () => {
+    setIsNotebookDialogOpen(true);
   };
 
   return (
@@ -148,6 +169,12 @@ export default function NoteEditor() {
           className="text-2xl font-bold border-none px-0 focus-visible:ring-0"
         />
         
+        <NotebookSelector
+          value={note.notebookId}
+          onValueChange={(value) => handleChange("notebookId", value || undefined)}
+          onCreateNew={handleCreateNotebook}
+        />
+        
         <Textarea
           placeholder="Start writing..."
           value={note.content}
@@ -163,6 +190,28 @@ export default function NoteEditor() {
           />
         </div>
       </div>
+      
+      <Dialog open={isNotebookDialogOpen} onOpenChange={setIsNotebookDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Notebook</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-muted-foreground">
+              To create a new notebook, please go to the Notebooks section.
+            </p>
+            <Button 
+              className="mt-4 w-full"
+              onClick={() => {
+                setIsNotebookDialogOpen(false);
+                navigate("/notebooks");
+              }}
+            >
+              Go to Notebooks
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

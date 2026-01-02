@@ -1,14 +1,44 @@
 import { db } from "@/lib/db";
-import { Note, Task } from "@/types";
+import { Note, Task, Notebook } from "@/types";
 
 export const seedDemoData = async () => {
   try {
     // Check if we already have data
     const noteCount = await db.notes.count();
     const taskCount = await db.tasks.count();
+    const notebookCount = await db.notebooks.count();
     
-    if (noteCount > 0 || taskCount > 0) {
+    if (noteCount > 0 || taskCount > 0 || notebookCount > 0) {
       return;
+    }
+    
+    // Seed notebooks
+    const demoNotebooks: Omit<Notebook, "id">[] = [
+      {
+        name: "Personal",
+        color: "#3b82f6",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        name: "Work",
+        color: "#10b981",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        name: "Ideas",
+        color: "#f59e0b",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ];
+    
+    const notebookIds: string[] = [];
+    for (const notebook of demoNotebooks) {
+      const id = crypto.randomUUID();
+      await db.notebooks.add({ ...notebook, id });
+      notebookIds.push(id);
     }
     
     // Seed notes
@@ -21,6 +51,7 @@ export const seedDemoData = async () => {
         updatedAt: new Date(),
         pinned: true,
         archived: false,
+        notebookId: notebookIds[0], // Personal
       },
       {
         title: "Meeting Notes",
@@ -30,6 +61,7 @@ export const seedDemoData = async () => {
         updatedAt: new Date(Date.now() - 86400000),
         pinned: false,
         archived: false,
+        notebookId: notebookIds[1], // Work
       },
       {
         title: "Shopping List",
@@ -39,6 +71,17 @@ export const seedDemoData = async () => {
         updatedAt: new Date(Date.now() - 172800000),
         pinned: false,
         archived: false,
+        notebookId: notebookIds[0], // Personal
+      },
+      {
+        title: "App Idea",
+        content: "A new app idea for productivity tracking with gamification elements.",
+        tags: ["idea", "productivity"],
+        createdAt: new Date(Date.now() - 259200000),
+        updatedAt: new Date(Date.now() - 259200000),
+        pinned: false,
+        archived: false,
+        notebookId: notebookIds[2], // Ideas
       },
     ];
     
