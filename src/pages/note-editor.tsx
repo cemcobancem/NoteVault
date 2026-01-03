@@ -7,7 +7,7 @@ import { TagInput } from "@/components/ui/tag-input";
 import { db } from "@/lib/db";
 import { Note, AudioRecording } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { Save, ArrowLeft, Mic, FileText, Volume2 } from "lucide-react";
+import { Save, ArrowLeft, Mic, FileText, Volume2, Play } from "lucide-react";
 import { NotebookSelector } from "@/components/ui/notebook-selector";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -33,11 +33,21 @@ export default function NoteEditor() {
   const [isNotebookDialogOpen, setIsNotebookDialogOpen] = useState(false);
   const [isVoiceRecorderOpen, setIsVoiceRecorderOpen] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
+  const [playingRecordingId, setPlayingRecordingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
       fetchNote(id);
     }
+    
+    // Cleanup audio player on unmount
+    return () => {
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+        audioPlayerRef.current = null;
+      }
+    };
   }, [id]);
 
   const fetchNote = async (noteId: string) => {
@@ -86,7 +96,7 @@ export default function NoteEditor() {
 
   const handleSave = async (noteToSave?: typeof note) => {
     const noteData = noteToSave || note;
-    if (!noteData.title.trim() && !noteData.content.trim()) {
+    if (!noteData.title.trim() && !noteData.content.trim() && (!noteData.audioRecordings || noteData.audioRecordings.length === 0)) {
       return;
     }
     
@@ -149,7 +159,7 @@ export default function NoteEditor() {
     
     handleChange("content", updatedContent);
     handleChange("tags", updatedTags);
-    setIsVoiceRecorderOpen(false);
+    // Note: VoiceRecorder handles closing itself after transcription/recording completion
   };
 
   const handleRecordingComplete = (recording: AudioRecording) => {
@@ -160,6 +170,41 @@ export default function NoteEditor() {
       title: "Recording Attached",
       description: "Your audio recording has been attached to this note.",
     });
+  };
+  
+  const formatDuration = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+  
+  const handlePlayback = (recording: AudioRecording) => {
+    if (playingRecordingId === recording.id) {
+      // Pause if currently playing
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+        setPlayingRecordingId(null);
+      }
+      return;
+    }
+    
+    // Stop any currently playing audio
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.pause();
+      audioPlayerRef.current = null;
+    }
+    
+    // Start new playback
+    const url = URL.createObjectURL(recording.blob);
+    audioPlayerRef.current = new Audio(url);
+    
+    audioPlayerRef.current.onended = () => {
+      setPlayingRecordingId(null);
+      URL.revokeObjectURL(url); // Clean up the object URL
+    };
+    
+    audioPlayerRef.current.play();
+    setPlayingRecordingId(recording.id);
   };
 
   return (
@@ -240,21 +285,26 @@ export default function NoteEditor() {
                     <div>
                       <p className="text-sm font-medium">Recording</p>
                       <p className="text-xs text-muted-foreground">
-                        {recording.duration ? `${Math.floor(recording.duration / 60)}:${(recording.duration % 60).toString().padStart(2, '0')}` : 'Unknown duration'}
+                        {recording.duration ? formatDuration(recording.duration) : 'Unknown duration'}
                       </p>
                     </div>
                   </div>
                   <Button 
-                    variant="ghost" 
+                    variant={playingRecordingId === recording.id ? "destructive" : "secondary"} 
                     size="sm"
-                    onClick={() => {
-                      // Create object URL for playback
-                      const url = URL.createObjectURL(recording.blob);
-                      const audio = new Audio(url);
-                      audio.play();
-                    }}
+                    onClick={() => handlePlayback(recording)}
                   >
-                    Play
+                    {playingRecordingId === recording.id ? (
+                      <>
+                        <Pause className="h-4 w-4 mr-2" />
+                        Pause
+                      </>
+                    ) : (
+                      <>
+                        <Play className="h-4 w-4 mr-2" />
+                        Play
+                      </>
+                    )}
                   </Button>
                 </div>
               ))}

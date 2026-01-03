@@ -6,7 +6,7 @@ export interface UseVoiceRecorderReturn {
   audioUrl: string | null;
   recordingTime: number;
   startRecording: () => Promise<void>;
-  stopRecording: () => void;
+  stopRecording: () => { blob: Blob; duration: number } | null;
   playRecording: () => void;
   pauseRecording: () => void;
   resetRecording: () => void;
@@ -36,9 +36,7 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
       };
 
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const url = URL.createObjectURL(audioBlob);
-        setAudioUrl(url);
+        // This part is now handled by the return value of stopRecording
         stream.getTracks().forEach(track => track.stop());
       };
 
@@ -68,7 +66,15 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
+      
+      const finalDuration = recordingTime;
+      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+      const url = URL.createObjectURL(audioBlob);
+      setAudioUrl(url);
+      
+      return { blob: audioBlob, duration: finalDuration };
     }
+    return null;
   };
 
   const playRecording = () => {
