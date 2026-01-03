@@ -2,16 +2,21 @@
 
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Mic, Square, Play, Pause, RotateCcw } from "lucide-react";
+import { Mic, Square, Play, Pause, RotateCcw, FileAudio } from "lucide-react";
 import { useVoiceRecorder } from "@/hooks/use-voice-recorder";
 import { TranscriptionService } from "@/lib/transcription";
 import { useToast } from "@/hooks/use-toast";
+import { AudioRecording } from "@/types";
 
 interface VoiceRecorderProps {
   onTranscriptionComplete: (text: string) => void;
+  onRecordingComplete?: (recording: AudioRecording) => void;
 }
 
-export function VoiceRecorder({ onTranscriptionComplete }: VoiceRecorderProps) {
+export function VoiceRecorder({ 
+  onTranscriptionComplete,
+  onRecordingComplete
+}: VoiceRecorderProps) {
   const {
     isRecording,
     isPlaying,
@@ -27,6 +32,7 @@ export function VoiceRecorder({ onTranscriptionComplete }: VoiceRecorderProps) {
   const [isTranscribing, setIsTranscribing] = useState(false);
   const { toast } = useToast();
   const audioRef = useRef<HTMLAudioElement>(null);
+  const audioBlobRef = useRef<Blob | null>(null);
 
   const handleStartRecording = async () => {
     try {
@@ -42,19 +48,37 @@ export function VoiceRecorder({ onTranscriptionComplete }: VoiceRecorderProps) {
 
   const handleStopRecording = async () => {
     stopRecording();
+    
+    // Get the audio blob from the media recorder
+    if (audioUrl) {
+      try {
+        const response = await fetch(audioUrl);
+        const audioBlob = await response.blob();
+        audioBlobRef.current = audioBlob;
+        
+        // If a callback is provided, send the recording
+        if (onRecordingComplete) {
+          const recording: AudioRecording = {
+            id: crypto.randomUUID(),
+            blob: audioBlob,
+            createdAt: new Date(),
+            duration: recordingTime
+          };
+          onRecordingComplete(recording);
+        }
+      } catch (error) {
+        console.error("Failed to process audio recording:", error);
+      }
+    }
   };
 
   const handleTranscribe = async () => {
-    if (!audioUrl) return;
+    if (!audioUrl || !audioBlobRef.current) return;
     
     setIsTranscribing(true);
     try {
-      // Get the audio blob
-      const response = await fetch(audioUrl);
-      const audioBlob = await response.blob();
-      
       // Transcribe the audio
-      const result = await TranscriptionService.transcribe(audioBlob);
+      const result = await TranscriptionService.transcribe(audioBlobRef.current);
       
       // Pass the transcribed text to the parent component
       onTranscriptionComplete(result.text);
@@ -151,12 +175,12 @@ export function VoiceRecorder({ onTranscriptionComplete }: VoiceRecorderProps) {
       </div>
 
       {!isRecording && audioUrl && (
-        <div className="flex justify-center">
+        <div className="flex flex-col gap-3">
           <Button 
             size="lg" 
             onClick={handleTranscribe}
             disabled={isTranscribing}
-            className="w-full max-w-xs"
+            className="w-full"
           >
             {isTranscribing ? (
               <>
@@ -167,6 +191,29 @@ export function VoiceRecorder({ onTranscriptionComplete }: VoiceRecorderProps) {
               "Convert to Text"
             )}
           </Button>
+          
+          {onRecordingComplete && (
+            <Button 
+              size="lg" 
+              variant="outline"
+              onClick={() => {
+                if (audioBlobRef.current) {
+                  const recording: AudioRecording = {
+                    id: crypto.randomUUID(),
+                    blob: audioBlobRef.current,
+                    createdAt: new Date(),
+                    duration: recordingTime
+                  };
+                  onRecordingComplete(recording);
+                }
+                resetRecording();
+              }}
+              className="w-full"
+            >
+              <FileAudio className="mr-2 h-4 w-4" />
+              Attach Recording to Note
+            </Button>
+          )}
         </div>
       )}
 

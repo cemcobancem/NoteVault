@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { TagInput } from "@/components/ui/tag-input";
 import { db } from "@/lib/db";
-import { Note } from "@/types";
+import { Note, AudioRecording } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { Save, ArrowLeft, Mic, FileText, Volume2 } from "lucide-react";
 import { NotebookSelector } from "@/components/ui/notebook-selector";
@@ -26,6 +26,7 @@ export default function NoteEditor() {
     pinned: false,
     archived: false,
     notebookId: undefined,
+    audioRecordings: [],
   });
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
@@ -52,6 +53,7 @@ export default function NoteEditor() {
           pinned: existingNote.pinned,
           archived: existingNote.archived,
           notebookId: existingNote.notebookId,
+          audioRecordings: existingNote.audioRecordings || [],
         });
       }
     } catch (error) {
@@ -150,6 +152,16 @@ export default function NoteEditor() {
     setIsVoiceRecorderOpen(false);
   };
 
+  const handleRecordingComplete = (recording: AudioRecording) => {
+    const updatedRecordings = [...(note.audioRecordings || []), recording];
+    handleChange("audioRecordings", updatedRecordings);
+    
+    toast({
+      title: "Recording Attached",
+      description: "Your audio recording has been attached to this note.",
+    });
+  };
+
   return (
     <div className="min-h-screen pb-20 bg-background">
       <header className="sticky top-0 z-10 bg-background border-b border-border">
@@ -217,6 +229,39 @@ export default function NoteEditor() {
           className="min-h-[60vh] text-base border-none px-0 focus-visible:ring-0 resize-none"
         />
         
+        {note.audioRecordings && note.audioRecordings.length > 0 && (
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Audio Recordings</Label>
+            <div className="grid gap-2">
+              {note.audioRecordings.map((recording) => (
+                <div key={recording.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Volume2 className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium">Recording</p>
+                      <p className="text-xs text-muted-foreground">
+                        {recording.duration ? `${Math.floor(recording.duration / 60)}:${(recording.duration % 60).toString().padStart(2, '0')}` : 'Unknown duration'}
+                      </p>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => {
+                      // Create object URL for playback
+                      const url = URL.createObjectURL(recording.blob);
+                      const audio = new Audio(url);
+                      audio.play();
+                    }}
+                  >
+                    Play
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
         <div className="space-y-2">
           <Label className="text-sm font-medium">Tags</Label>
           <TagInput 
@@ -254,7 +299,10 @@ export default function NoteEditor() {
             <DialogTitle>Voice Recorder</DialogTitle>
           </DialogHeader>
           <div className="py-2">
-            <VoiceRecorder onTranscriptionComplete={handleTranscriptionComplete} />
+            <VoiceRecorder 
+              onTranscriptionComplete={handleTranscriptionComplete}
+              onRecordingComplete={handleRecordingComplete}
+            />
           </div>
         </DialogContent>
       </Dialog>

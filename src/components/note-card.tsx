@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pin, Archive, Edit, Trash2, BookOpen, Mic } from "lucide-react";
+import { Pin, Archive, Edit, Trash2, BookOpen, Mic, Volume2 } from "lucide-react";
 import { Note } from "@/types";
 import { format } from "date-fns";
 import { db } from "@/lib/db";
@@ -42,6 +42,9 @@ export function NoteCard({ note, onEdit, onDelete, onPin, onArchive }: NoteCardP
 
   // Check if this note was created from voice recording
   const isVoiceNote = note.tags.includes("voice") || note.tags.includes("recording");
+  
+  // Check if this note has audio recordings
+  const hasAudioRecordings = note.audioRecordings && note.audioRecordings.length > 0;
 
   return (
     <Card className="relative shadow-sm hover:shadow-md transition-shadow duration-200 bg-white border border-gray-200">
@@ -55,6 +58,7 @@ export function NoteCard({ note, onEdit, onDelete, onPin, onArchive }: NoteCardP
           <CardTitle className="text-lg line-clamp-2 flex items-center gap-2">
             {note.title || "Untitled Note"}
             {isVoiceNote && <Mic className="h-4 w-4 text-muted-foreground" />}
+            {hasAudioRecordings && <Volume2 className="h-4 w-4 text-muted-foreground" />}
           </CardTitle>
         </div>
         {loadingNotebook ? (

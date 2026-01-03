@@ -25,10 +25,9 @@ class NotesAppDB extends Dexie {
 
   constructor() {
     super("NotesAppDB");
-    
-    this.version(2).stores({
+    this.version(3).stores({
       notebooks: "++id, name, createdAt, updatedAt",
-      notes: "++id, title, content, tags, createdAt, updatedAt, pinned, archived, notebookId",
+      notes: "++id, title, content, tags, createdAt, updatedAt, pinned, archived, notebookId, audioRecordings",
       tasks: "++id, title, description, dueDate, priority, status, tags, createdAt, updatedAt",
       settings: "++id, theme, lastExport"
     });

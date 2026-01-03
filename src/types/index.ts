@@ -19,6 +19,16 @@ export interface Note {
   pinned: boolean;
   archived: boolean;
   notebookId?: string;
+  audioRecordings?: AudioRecording[]; // Add audio recordings to notes
+}
+
+// New interface for audio recordings
+export interface AudioRecording {
+  id: string;
+  blob: Blob;
+  createdAt: Date;
+  transcription?: string;
+  duration?: number;
 }
 
 export interface Task {
