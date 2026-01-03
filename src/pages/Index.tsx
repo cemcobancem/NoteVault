@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { db } from "@/lib/db";
 import { Note, Notebook } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { seedDemoData } from "@/lib/seed";
 
 export default function NotesPage() {
   const { notebookId } = useParams();
@@ -59,9 +58,6 @@ export default function NotesPage() {
 
   useEffect(() => {
     fetchNotes();
-    if (!notebookId) {
-      seedDemoData();
-    }
   }, [notebookId]);
 
   const handleEdit = (note: Note) => {
