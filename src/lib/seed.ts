@@ -86,6 +86,16 @@ export const seedDemoData = async () => {
         archived: false,
         notebookId: notebookIds[2], // Ideas
       },
+      {
+        title: "Voice Recorded Note",
+        content: "This note was created using voice recording. You can record your thoughts and they will be transcribed into text automatically.",
+        tags: ["voice", "recording"],
+        createdAt: new Date(Date.now() - 345600000),
+        updatedAt: new Date(Date.now() - 345600000),
+        pinned: false,
+        archived: false,
+        notebookId: notebookIds[0], // Personal
+      },
     ];
     
     // Seed tasks

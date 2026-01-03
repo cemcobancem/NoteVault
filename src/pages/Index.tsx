@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Plus, Pin, BookOpen, FileText } from "lucide-react";
+import { Plus, Pin, BookOpen, FileText, Mic } from "lucide-react";
 import { AppBar } from "@/components/ui/app-bar";
 import { Fab } from "@/components/ui/fab";
 import { NoteCard } from "@/components/note-card";
@@ -34,7 +34,6 @@ export default function NotesPage() {
           navigate("/");
           return;
         }
-        
         // Fetch notes for this notebook
         allNotes = await db.notes
           .where("notebookId")
@@ -77,6 +76,7 @@ export default function NotesPage() {
 
   const handleDelete = async (note: Note) => {
     if (!note.id) return;
+    
     try {
       await db.notes.delete(note.id);
       toast({
@@ -96,6 +96,7 @@ export default function NotesPage() {
 
   const handlePin = async (note: Note) => {
     if (!note.id) return;
+    
     try {
       await db.notes.update(note.id, {
         pinned: !note.pinned,
@@ -114,6 +115,7 @@ export default function NotesPage() {
 
   const handleArchive = async (note: Note) => {
     if (!note.id) return;
+    
     try {
       await db.notes.update(note.id, {
         archived: !note.archived,
@@ -149,7 +151,6 @@ export default function NotesPage() {
   return (
     <div className="min-h-screen pb-20 bg-background">
       <AppBar title={notebook ? notebook.name : "All Notes"} showMenu={!notebookId} />
-      
       <div className="container py-4 space-y-6">
         {notebook && (
           <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
@@ -165,11 +166,7 @@ export default function NotesPage() {
                 </p>
               </div>
             </div>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => navigate("/")}
-            >
+            <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
               Back to All Notes
             </Button>
           </div>
@@ -224,13 +221,21 @@ export default function NotesPage() {
                   ? "Create your first note in this notebook to get started." 
                   : "Create your first note to start capturing your thoughts."}
               </p>
-              <Button 
-                onClick={() => navigate("/notes/new")}
-                size="lg"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Create Note
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button onClick={() => navigate("/notes/new")} size="lg">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Note
+                </Button>
+                <Button 
+                  onClick={() => navigate("/notes/new")} 
+                  variant="outline" 
+                  size="lg"
+                  className="flex items-center gap-2"
+                >
+                  <Mic className="h-4 w-4" />
+                  Voice Note
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="grid gap-4">

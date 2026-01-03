@@ -7,14 +7,9 @@ import { TagInput } from "@/components/ui/tag-input";
 import { db } from "@/lib/db";
 import { Note } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { Save, ArrowLeft, Mic, FileText } from "lucide-react";
+import { Save, ArrowLeft, Mic, FileText, Volume2 } from "lucide-react";
 import { NotebookSelector } from "@/components/ui/notebook-selector";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle 
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { VoiceRecorder } from "@/components/ui/voice-recorder";
 
@@ -71,14 +66,17 @@ export default function NoteEditor() {
   };
 
   const handleChange = (field: keyof Note, value: any) => {
-    const updatedNote = { ...note, [field]: value, updatedAt: new Date() };
+    const updatedNote = {
+      ...note,
+      [field]: value,
+      updatedAt: new Date()
+    };
     setNote(updatedNote);
     
     // Auto-save after 1 second of inactivity
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
-    
     saveTimeoutRef.current = setTimeout(() => {
       handleSave(updatedNote);
     }, 1000);
@@ -86,22 +84,22 @@ export default function NoteEditor() {
 
   const handleSave = async (noteToSave?: typeof note) => {
     const noteData = noteToSave || note;
-    
     if (!noteData.title.trim() && !noteData.content.trim()) {
       return;
     }
     
     setIsSaving(true);
-    
     try {
       if (id) {
         // Update existing note
         await db.notes.update(id, noteData);
       } else {
         // Create new note
-        await db.notes.add({ ...noteData, id: crypto.randomUUID() });
+        await db.notes.add({
+          ...noteData,
+          id: crypto.randomUUID()
+        });
       }
-      
       setLastSaved(new Date().toLocaleTimeString());
       toast({
         title: "Note saved",
@@ -124,7 +122,6 @@ export default function NoteEditor() {
       clearTimeout(saveTimeoutRef.current);
       handleSave();
     }
-    
     // Navigate back to the notebook or to all notes
     if (note.notebookId) {
       navigate(`/notebooks/${note.notebookId}`);
@@ -139,10 +136,17 @@ export default function NoteEditor() {
 
   const handleTranscriptionComplete = (transcribedText: string) => {
     const updatedContent = note.content 
-      ? `${note.content}\n\n${transcribedText}`
+      ? `${note.content}\n\n${transcribedText}` 
       : transcribedText;
     
+    // Add voice/recording tag if not already present
+    let updatedTags = [...note.tags];
+    if (!updatedTags.includes("voice") && !updatedTags.includes("recording")) {
+      updatedTags = [...updatedTags, "voice"];
+    }
+    
     handleChange("content", updatedContent);
+    handleChange("tags", updatedTags);
     setIsVoiceRecorderOpen(false);
   };
 
@@ -160,18 +164,18 @@ export default function NoteEditor() {
           </Button>
           
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
+            <Button 
+              variant="ghost" 
+              size="icon" 
               onClick={() => setIsVoiceRecorderOpen(true)}
               className="rounded-full"
             >
               <Mic className="h-5 w-5" />
             </Button>
             
-            <Button
-              variant="default"
-              size="sm"
+            <Button 
+              variant="default" 
+              size="sm" 
               onClick={() => handleSave()}
               disabled={isSaving}
               className="rounded-full px-4"
@@ -200,8 +204,8 @@ export default function NoteEditor() {
           </span>
         </div>
         
-        <NotebookSelector
-          value={note.notebookId || ""}
+        <NotebookSelector 
+          value={note.notebookId || ""} 
           onValueChange={(value) => handleChange("notebookId", value || undefined)}
           onCreateNew={handleCreateNotebook}
         />
@@ -215,9 +219,9 @@ export default function NoteEditor() {
         
         <div className="space-y-2">
           <Label className="text-sm font-medium">Tags</Label>
-          <TagInput
-            tags={note.tags}
-            onChange={(tags) => handleChange("tags", tags)}
+          <TagInput 
+            tags={note.tags} 
+            onChange={(tags) => handleChange("tags", tags)} 
           />
         </div>
       </div>
@@ -232,7 +236,7 @@ export default function NoteEditor() {
               To create a new notebook, please go to the Notebooks section.
             </p>
             <Button 
-              className="w-full"
+              className="w-full" 
               onClick={() => {
                 setIsNotebookDialogOpen(false);
                 navigate("/notebooks");
