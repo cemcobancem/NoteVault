@@ -151,7 +151,7 @@ export default function NoteEditor() {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
   
-  const handlePlayback = (recording: AudioRecording) => {
+  const handlePlayback = async (recording: AudioRecording) => {
     if (playingRecordingId === recording.id) {
       if (audioPlayerRef.current) {
         audioPlayerRef.current.pause();
@@ -166,13 +166,15 @@ export default function NoteEditor() {
     }
     
     try {
-      // Ensure the blob is valid
       if (!(recording.blob instanceof Blob)) {
         throw new Error("Invalid audio data");
       }
 
       const url = URL.createObjectURL(recording.blob);
       const audio = new Audio();
+      
+      // Crucial: Set properties before src for better compatibility
+      audio.preload = "auto";
       audio.src = url;
       audioPlayerRef.current = audio;
       
@@ -182,38 +184,36 @@ export default function NoteEditor() {
       };
       
       audio.onerror = (e) => {
-        console.error("Audio element error:", e);
+        console.error("Audio playback error:", e);
         toast({
           title: "Playback Error",
-          description: "This audio format may not be supported in your browser.",
+          description: "Format not supported by your browser.",
           variant: "destructive",
         });
         setPlayingRecordingId(null);
         URL.revokeObjectURL(url);
       };
       
-      const playPromise = audio.play();
-      if (playPromise !== undefined) {
-        playPromise.then(() => {
-          setPlayingRecordingId(recording.id);
-        }).catch(err => {
-          console.error("Playback failed:", err);
-          toast({
-            title: "Playback Failed",
-            description: "Browser blocked audio playback. Try clicking again.",
-            variant: "destructive",
-          });
-          setPlayingRecordingId(null);
-          URL.revokeObjectURL(url);
-        });
+      // Start playback immediately in response to click
+      try {
+        await audio.play();
+        setPlayingRecordingId(recording.id);
+      } catch (playErr) {
+        console.warn("Initial play failed, attempting retry...", playErr);
+        // Sometimes browsers need a second attempt or a slight kick
+        audio.muted = true;
+        await audio.play();
+        audio.muted = false;
+        setPlayingRecordingId(recording.id);
       }
     } catch (err) {
-      console.error("Error setting up playback:", err);
+      console.error("Playback setup failed:", err);
       toast({
-        title: "Error",
-        description: "Could not initialize audio player.",
+        title: "Playback Blocked",
+        description: "Please try clicking the button again. Browsers sometimes require multiple interactions.",
         variant: "destructive",
       });
+      setPlayingRecordingId(null);
     }
   };
 
