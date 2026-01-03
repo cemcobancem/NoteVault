@@ -18,6 +18,7 @@ export default function SearchPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<Note[]>([]);
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
+  const [activeTab, setActiveTab] = useState<"notes" | "tasks">("notes");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -172,8 +173,12 @@ export default function SearchPage() {
     }
   };
 
-  const handleCreateNote = () => {
-    navigate("/notes/new");
+  const handleFabClick = () => {
+    if (activeTab === "notes") {
+      navigate("/notes/new");
+    } else {
+      navigate("/tasks/new");
+    }
   };
 
   return (
@@ -194,7 +199,7 @@ export default function SearchPage() {
           <h2 className="text-xl font-semibold">Your Workspace</h2>
         </div>
 
-        <Tabs defaultValue="notes" className="w-full">
+        <Tabs defaultValue="notes" className="w-full" onValueChange={(value) => setActiveTab(value as "notes" | "tasks")}>
           <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="notes" className="flex items-center gap-2 py-3">
               <FileText className="h-4 w-4" />
@@ -228,7 +233,7 @@ export default function SearchPage() {
                     : "Create your first note to get started."}
                 </p>
                 <Button 
-                  onClick={handleCreateNote} 
+                  onClick={() => navigate("/notes/new")} 
                   className="mt-4 bg-green-500 hover:bg-green-600"
                 >
                   <Plus className="mr-2 h-4 w-4" />
@@ -282,7 +287,7 @@ export default function SearchPage() {
         </Tabs>
       </div>
       
-      <Fab onClick={handleCreateNote} />
+      <Fab onClick={handleFabClick} />
     </div>
   );
 }
