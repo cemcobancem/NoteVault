@@ -192,9 +192,12 @@ export default function SearchPage() {
         
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold">Your Workspace</h2>
-          <Button onClick={handleCreateNote} size="sm">
-            <Plus className="mr-2 h-4 w-4" />
-            New Note
+          <Button 
+            onClick={handleCreateNote} 
+            size="sm"
+            className="bg-green-500 hover:bg-green-600 rounded-full h-10 w-10 p-0"
+          >
+            <Plus className="h-5 w-5 text-white" />
           </Button>
         </div>
 
@@ -231,7 +234,10 @@ export default function SearchPage() {
                     ? "Try different search terms to find what you're looking for."
                     : "Create your first note to get started."}
                 </p>
-                <Button onClick={handleCreateNote} className="mt-4">
+                <Button 
+                  onClick={handleCreateNote} 
+                  className="mt-4 bg-green-500 hover:bg-green-600"
+                >
                   <Plus className="mr-2 h-4 w-4" />
                   Create Note
                 </Button>
