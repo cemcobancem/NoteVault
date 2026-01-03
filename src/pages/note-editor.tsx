@@ -28,16 +28,17 @@ export default function NoteEditor() {
     notebookId: undefined,
     audioRecordings: [],
   });
+  
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [isNotebookDialogOpen, setIsNotebookDialogOpen] = useState(false);
   const [isVoiceRecorderOpen, setIsVoiceRecorderOpen] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Using a ref for the audio element in the DOM
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playingRecordingId, setPlayingRecordingId] = useState<string | null>(null);
   const [currentUrl, setCurrentUrl] = useState<string | null>(null);
+  const [isAudioUnlocked, setIsAudioUnlocked] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -48,6 +49,19 @@ export default function NoteEditor() {
       if (currentUrl) URL.revokeObjectURL(currentUrl);
     };
   }, [id]);
+
+  // Master unlock function: Call this on any click to authorize audio
+  const unlockAudio = () => {
+    if (isAudioUnlocked || !audioRef.current) return;
+    
+    // Play a silent sound to unlock the browser's audio context
+    audioRef.current.play().catch(() => {
+      // Ignore initial block as we're just trying to unlock
+    });
+    audioRef.current.pause();
+    setIsAudioUnlocked(true);
+    console.log("Audio engine unlocked by user gesture");
+  };
 
   const fetchNote = async (noteId: string) => {
     try {
@@ -170,7 +184,7 @@ export default function NoteEditor() {
       const url = URL.createObjectURL(recording.blob);
       setCurrentUrl(url);
       
-      // Load and play immediately
+      // Update and play
       audio.src = url;
       audio.load();
       
@@ -179,19 +193,12 @@ export default function NoteEditor() {
         playPromise.then(() => {
           setPlayingRecordingId(recording.id);
         }).catch(err => {
-          console.error("Playback blocked:", err);
-          // If blocked, try once more with muted kick (common for mobile/safari)
+          console.error("Playback failed:", err);
+          // Fallback for strict browsers: try muted first then unmute
           audio.muted = true;
           audio.play().then(() => {
             audio.muted = false;
             setPlayingRecordingId(recording.id);
-          }).catch(innerErr => {
-            console.error("Critical playback block:", innerErr);
-            toast({
-              title: "Playback Blocked",
-              description: "Please click again. Browsers require a fresh user gesture.",
-              variant: "destructive",
-            });
           });
         });
       }
@@ -201,7 +208,7 @@ export default function NoteEditor() {
   };
 
   return (
-    <div className="min-h-screen pb-20 bg-background">
+    <div className="min-h-screen pb-20 bg-background" onClick={unlockAudio}>
       {/* Hidden audio element for consistent playback */}
       <audio 
         ref={audioRef} 
@@ -276,6 +283,7 @@ export default function NoteEditor() {
                     size="sm"
                     onClick={(e) => {
                       e.preventDefault();
+                      e.stopPropagation(); // Keep click within this button
                       handlePlayback(recording);
                     }}
                   >
