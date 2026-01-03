@@ -24,7 +24,6 @@ export default function SettingsPage() {
         id: "settings",
         theme: "system",
       };
-      
       setSettings(currentSettings);
       setTheme(currentSettings.theme);
     } catch (error) {
@@ -43,7 +42,6 @@ export default function SettingsPage() {
 
   const handleThemeChange = async (newTheme: "light" | "dark" | "system") => {
     setTheme(newTheme);
-    
     try {
       if (settings) {
         await db.settings.update(settings.id!, { theme: newTheme });
@@ -90,7 +88,6 @@ export default function SettingsPage() {
       
       const dataStr = JSON.stringify(exportData, null, 2);
       const dataBlob = new Blob([dataStr], { type: "application/json" });
-      
       const link = document.createElement("a");
       link.href = URL.createObjectURL(dataBlob);
       link.download = `notes-app-export-${format(new Date(), "yyyy-MM-dd")}.json`;
@@ -219,16 +216,14 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen pb-20 bg-background">
+    <div className="min-h-screen bg-gray-50 pb-20">
       <AppBar title="Settings" />
-      
       <div className="container py-6 space-y-8">
-        <section className="bg-card rounded-lg border p-6">
+        <section className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
             <Palette className="h-5 w-5 text-primary" />
             <h2 className="text-xl font-semibold">Appearance</h2>
           </div>
-          
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="theme" className="text-base">Theme</Label>
@@ -249,37 +244,27 @@ export default function SettingsPage() {
           </div>
         </section>
         
-        <section className="bg-card rounded-lg border p-6">
+        <section className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-4">
             <Database className="h-5 w-5 text-primary" />
             <h2 className="text-xl font-semibold">Data Management</h2>
           </div>
-          
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row gap-3">
-              <Button 
-                onClick={handleExport} 
-                variant="outline"
-                className="flex-1"
-              >
+              <Button onClick={handleExport} variant="outline" className="flex-1">
                 <Download className="mr-2 h-4 w-4" />
                 Export Data
               </Button>
-              
               <div className="flex-1">
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  asChild
-                >
+                <Button variant="outline" className="w-full" asChild>
                   <label>
                     <Upload className="mr-2 h-4 w-4" />
                     Import Data
-                    <input
-                      type="file"
-                      accept=".json"
-                      className="hidden"
-                      onChange={handleImport}
+                    <input 
+                      type="file" 
+                      accept=".json" 
+                      className="hidden" 
+                      onChange={handleImport} 
                     />
                   </label>
                 </Button>
@@ -292,9 +277,9 @@ export default function SettingsPage() {
               <AlertDescription>
                 This will permanently delete all your notebooks, notes, and tasks. This action cannot be undone.
               </AlertDescription>
-              <Button
-                variant="destructive"
-                className="mt-3"
+              <Button 
+                variant="destructive" 
+                className="mt-3" 
                 onClick={handleClearData}
               >
                 <Trash2 className="mr-2 h-4 w-4" />

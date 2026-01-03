@@ -80,6 +80,7 @@ export default function SearchPage() {
 
   const handleNoteDelete = async (note: Note) => {
     if (!note.id) return;
+    
     try {
       await db.notes.delete(note.id);
       toast({
@@ -99,6 +100,7 @@ export default function SearchPage() {
 
   const handleNotePin = async (note: Note) => {
     if (!note.id) return;
+    
     try {
       await db.notes.update(note.id, {
         pinned: !note.pinned,
@@ -117,6 +119,7 @@ export default function SearchPage() {
 
   const handleNoteArchive = async (note: Note) => {
     if (!note.id) return;
+    
     try {
       await db.notes.update(note.id, {
         archived: !note.archived,
@@ -139,6 +142,7 @@ export default function SearchPage() {
 
   const handleTaskDelete = async (task: Task) => {
     if (!task.id) return;
+    
     try {
       await db.tasks.delete(task.id);
       toast({
@@ -158,6 +162,7 @@ export default function SearchPage() {
 
   const handleTaskComplete = async (task: Task) => {
     if (!task.id) return;
+    
     try {
       await db.tasks.update(task.id, {
         status: task.status === "done" ? "open" : "done",
@@ -175,15 +180,14 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="min-h-screen pb-20 bg-background">
+    <div className="min-h-screen bg-gray-50 pb-20">
       <AppBar title="Search" showSearch={false} />
-      
       <div className="container py-4">
         <div className="relative mb-6">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search notes and tasks..."
-            className="pl-10 py-6 text-base"
+            className="pl-10 py-6 text-base shadow-sm"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -213,7 +217,7 @@ export default function SearchPage() {
           
           <TabsContent value="notes" className="mt-0">
             {filteredNotes.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center rounded-lg border border-dashed">
+              <div className="flex flex-col items-center justify-center py-12 text-center rounded-lg border border-dashed bg-white shadow-sm">
                 <div className="bg-muted p-5 rounded-full mb-4">
                   <FileText className="h-8 w-8 text-muted-foreground" />
                 </div>
@@ -244,7 +248,7 @@ export default function SearchPage() {
           
           <TabsContent value="tasks" className="mt-0">
             {filteredTasks.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center rounded-lg border border-dashed">
+              <div className="flex flex-col items-center justify-center py-12 text-center rounded-lg border border-dashed bg-white shadow-sm">
                 <div className="bg-muted p-5 rounded-full mb-4">
                   <CheckSquare className="h-8 w-8 text-muted-foreground" />
                 </div>

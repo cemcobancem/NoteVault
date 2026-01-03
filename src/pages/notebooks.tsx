@@ -8,13 +8,7 @@ import { Button } from "@/components/ui/button";
 import { db } from "@/lib/db";
 import { Notebook } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -67,7 +61,7 @@ export default function NotebooksPage() {
       });
       return;
     }
-
+    
     try {
       const newNotebook: Omit<Notebook, "id"> = {
         name: newNotebookName.trim(),
@@ -75,8 +69,11 @@ export default function NotebooksPage() {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-
-      await db.notebooks.add({ ...newNotebook, id: crypto.randomUUID() });
+      
+      await db.notebooks.add({
+        ...newNotebook,
+        id: crypto.randomUUID()
+      });
       
       toast({
         title: "Notebook created",
@@ -124,13 +121,12 @@ export default function NotebooksPage() {
   };
 
   return (
-    <div className="min-h-screen pb-20 bg-background">
+    <div className="min-h-screen bg-gray-50 pb-20">
       <AppBar title="Notebooks" />
-      
       <div className="container py-4 space-y-6">
         {notebooks.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="bg-muted p-6 rounded-full mb-4">
+            <div className="bg-white p-6 rounded-full mb-4 shadow-sm border border-gray-200">
               <BookOpen className="h-12 w-12 text-muted-foreground" />
             </div>
             <h2 className="text-2xl font-bold mb-2">No Notebooks Yet</h2>
@@ -151,11 +147,11 @@ export default function NotebooksPage() {
                 <div className="space-y-4 py-2">
                   <div className="space-y-2">
                     <Label htmlFor="name">Name</Label>
-                    <Input
-                      id="name"
-                      value={newNotebookName}
-                      onChange={(e) => setNewNotebookName(e.target.value)}
-                      placeholder="Notebook name"
+                    <Input 
+                      id="name" 
+                      value={newNotebookName} 
+                      onChange={(e) => setNewNotebookName(e.target.value)} 
+                      placeholder="Notebook name" 
                     />
                   </div>
                   <div className="space-y-2">
@@ -175,10 +171,7 @@ export default function NotebooksPage() {
                       ))}
                     </div>
                   </div>
-                  <Button 
-                    onClick={handleCreateNotebook}
-                    className="w-full"
-                  >
+                  <Button onClick={handleCreateNotebook} className="w-full">
                     Create Notebook
                   </Button>
                 </div>
@@ -193,14 +186,13 @@ export default function NotebooksPage() {
                 {notebooks.length} {notebooks.length === 1 ? 'notebook' : 'notebooks'}
               </span>
             </div>
-            
             <div className="grid gap-4">
               {notebooks.map((notebook) => (
-                <NotebookCard
-                  key={notebook.id}
-                  notebook={notebook}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
+                <NotebookCard 
+                  key={notebook.id} 
+                  notebook={notebook} 
+                  onEdit={handleEdit} 
+                  onDelete={handleDelete} 
                 />
               ))}
             </div>

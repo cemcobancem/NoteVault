@@ -134,7 +134,7 @@ export default function NotesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen pb-20 bg-background">
+      <div className="min-h-screen bg-gray-50 pb-20">
         <AppBar title={notebook ? notebook.name : "All Notes"} showMenu={!notebookId} />
         <div className="container py-4">
           <div className="flex items-center justify-center h-64">
@@ -149,11 +149,11 @@ export default function NotesPage() {
   }
 
   return (
-    <div className="min-h-screen pb-20 bg-background">
+    <div className="min-h-screen bg-gray-50 pb-20">
       <AppBar title={notebook ? notebook.name : "All Notes"} showMenu={!notebookId} />
       <div className="container py-4 space-y-6">
         {notebook && (
-          <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border border-gray-200">
             <div className="flex items-center gap-3">
               <div 
                 className="w-4 h-4 rounded-full" 
@@ -209,7 +209,7 @@ export default function NotesPage() {
           </div>
           
           {otherNotes.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center rounded-lg border border-dashed">
+            <div className="flex flex-col items-center justify-center py-12 text-center rounded-lg border border-dashed bg-white shadow-sm">
               <div className="bg-muted p-5 rounded-full mb-4">
                 <FileText className="h-8 w-8 text-muted-foreground" />
               </div>

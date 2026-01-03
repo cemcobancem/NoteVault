@@ -38,12 +38,11 @@ export function NotebookCard({ notebook, onEdit, onDelete }: NotebookCardProps) 
       });
       return;
     }
-    
     onDelete(notebook);
   };
 
   return (
-    <Card>
+    <Card className="shadow-sm hover:shadow-md transition-shadow duration-200 bg-white border border-gray-200">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <div className="flex items-center">

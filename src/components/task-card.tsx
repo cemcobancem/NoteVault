@@ -18,14 +18,14 @@ export function TaskCard({ task, onEdit, onDelete, onComplete }: TaskCardProps) 
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== "done";
 
   return (
-    <Card className={task.status === "done" ? "opacity-75" : ""}>
+    <Card className={`shadow-sm hover:shadow-md transition-shadow duration-200 bg-white border border-gray-200 ${task.status === "done" ? "opacity-75" : ""}`}>
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
           <div className="flex items-start gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="mt-0.5 h-5 w-5"
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="mt-0.5 h-5 w-5" 
               onClick={() => onComplete(task)}
             >
               {task.status === "done" ? (
@@ -39,18 +39,21 @@ export function TaskCard({ task, onEdit, onDelete, onComplete }: TaskCardProps) 
             </CardTitle>
           </div>
         </div>
-        <div className="flex gap-2">
+        
+        <div className="flex gap-2 mt-2">
           <PriorityBadge priority={task.priority} />
           <StatusBadge status={task.status} />
           {isOverdue && (
             <Badge variant="destructive">Overdue</Badge>
           )}
         </div>
+        
         {task.dueDate && (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground mt-1">
             Due: {format(new Date(task.dueDate), "MMM d, yyyy")}
           </p>
         )}
+        
         <p className="text-xs text-muted-foreground">
           {format(new Date(task.updatedAt), "MMM d, yyyy h:mm a")}
         </p>

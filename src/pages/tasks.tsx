@@ -49,15 +49,12 @@ export default function TasksPage() {
     status: Status | "all"
   ) => {
     let result = tasksToFilter;
-    
     if (priority !== "all") {
       result = result.filter(task => task.priority === priority);
     }
-    
     if (status !== "all") {
       result = result.filter(task => task.status === status);
     }
-    
     setFilteredTasks(result);
   };
 
@@ -71,6 +68,7 @@ export default function TasksPage() {
 
   const handleDelete = async (task: Task) => {
     if (!task.id) return;
+    
     try {
       await db.tasks.delete(task.id);
       toast({
@@ -90,6 +88,7 @@ export default function TasksPage() {
 
   const handleComplete = async (task: Task) => {
     if (!task.id) return;
+    
     try {
       await db.tasks.update(task.id, {
         status: task.status === "done" ? "open" : "done",
@@ -115,7 +114,7 @@ export default function TasksPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen pb-20 bg-background">
+      <div className="min-h-screen bg-gray-50 pb-20">
         <AppBar title="Tasks" />
         <div className="container py-4">
           <div className="flex items-center justify-center h-64">
@@ -130,9 +129,8 @@ export default function TasksPage() {
   }
 
   return (
-    <div className="min-h-screen pb-20 bg-background">
+    <div className="min-h-screen bg-gray-50 pb-20">
       <AppBar title="Tasks" />
-      
       <div className="container py-4 space-y-6">
         <div className="flex flex-wrap gap-2">
           <Button 
@@ -166,9 +164,7 @@ export default function TasksPage() {
             <span className="hidden sm:inline">High</span>
             <span className="sm:hidden">H</span>
           </Button>
-          
           <div className="border-l border-border mx-1 h-6 self-center"></div>
-          
           <Button 
             variant={statusFilter === "all" ? "default" : "outline"} 
             size="sm" 
@@ -190,20 +186,15 @@ export default function TasksPage() {
           >
             Done
           </Button>
-          
           {hasFilters && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={clearFilters}
-            >
+            <Button variant="ghost" size="sm" onClick={clearFilters}>
               Clear
             </Button>
           )}
         </div>
         
         {filteredTasks.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center rounded-lg border border-dashed">
+          <div className="flex flex-col items-center justify-center py-12 text-center rounded-lg border border-dashed bg-white shadow-sm">
             <div className="bg-muted p-5 rounded-full mb-4">
               <CheckSquare className="h-8 w-8 text-muted-foreground" />
             </div>
@@ -215,10 +206,7 @@ export default function TasksPage() {
                 ? "Try adjusting your filters to see more tasks." 
                 : "Create your first task to start organizing your work."}
             </p>
-            <Button 
-              onClick={() => navigate("/tasks/new")} 
-              size="lg"
-            >
+            <Button onClick={() => navigate("/tasks/new")} size="lg">
               <Plus className="mr-2 h-4 w-4" />
               Create Task
             </Button>

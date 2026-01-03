@@ -44,7 +44,7 @@ export function NoteCard({ note, onEdit, onDelete, onPin, onArchive }: NoteCardP
   const isVoiceNote = note.tags.includes("voice") || note.tags.includes("recording");
 
   return (
-    <Card className="relative">
+    <Card className="relative shadow-sm hover:shadow-md transition-shadow duration-200 bg-white border border-gray-200">
       {note.pinned && (
         <div className="absolute top-2 right-2">
           <Pin className="h-4 w-4 text-primary" fill="currentColor" />
