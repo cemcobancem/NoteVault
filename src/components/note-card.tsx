@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pin, Archive, Edit, Trash2, Volume2 } from "lucide-react";
+import { Pin, Archive, Edit, Trash2, Volume2, Mic } from "lucide-react";
 import { Note } from "@/types";
 import { format } from "date-fns";
 import { db } from "@/lib/db";
