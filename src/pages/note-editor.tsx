@@ -7,7 +7,7 @@ import { TagInput } from "@/components/ui/tag-input";
 import { db } from "@/lib/db";
 import { Note, AudioRecording } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { Save, ArrowLeft, Mic, FileText, Volume2, Play } from "lucide-react";
+import { Save, ArrowLeft, Mic, FileText, Volume2, Play, Pause } from "lucide-react";
 import { NotebookSelector } from "@/components/ui/notebook-selector";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
