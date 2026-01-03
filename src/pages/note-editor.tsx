@@ -7,7 +7,7 @@ import { TagInput } from "@/components/ui/tag-input";
 import { db } from "@/lib/db";
 import { Note, AudioRecording } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { Save, ArrowLeft, Mic, FileText, Volume2, Play, Pause, AlertCircle } from "lucide-react";
+import { Save, ArrowLeft, Mic, FileText, Volume2, Play, Pause } from "lucide-react";
 import { NotebookSelector } from "@/components/ui/notebook-selector";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -33,8 +33,11 @@ export default function NoteEditor() {
   const [isNotebookDialogOpen, setIsNotebookDialogOpen] = useState(false);
   const [isVoiceRecorderOpen, setIsVoiceRecorderOpen] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
+  
+  // Using a ref for the audio element in the DOM
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [playingRecordingId, setPlayingRecordingId] = useState<string | null>(null);
+  const [currentUrl, setCurrentUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -42,10 +45,7 @@ export default function NoteEditor() {
     }
     
     return () => {
-      if (audioPlayerRef.current) {
-        audioPlayerRef.current.pause();
-        audioPlayerRef.current = null;
-      }
+      if (currentUrl) URL.revokeObjectURL(currentUrl);
     };
   }, [id]);
 
@@ -152,73 +152,63 @@ export default function NoteEditor() {
   };
   
   const handlePlayback = async (recording: AudioRecording) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    // Toggle off if clicking the same one
     if (playingRecordingId === recording.id) {
-      if (audioPlayerRef.current) {
-        audioPlayerRef.current.pause();
-        setPlayingRecordingId(null);
-      }
+      audio.pause();
+      setPlayingRecordingId(null);
       return;
     }
-    
-    if (audioPlayerRef.current) {
-      audioPlayerRef.current.pause();
-      audioPlayerRef.current = null;
-    }
-    
-    try {
-      if (!(recording.blob instanceof Blob)) {
-        throw new Error("Invalid audio data");
-      }
 
+    // Stop current
+    audio.pause();
+    if (currentUrl) URL.revokeObjectURL(currentUrl);
+
+    try {
       const url = URL.createObjectURL(recording.blob);
-      const audio = new Audio();
+      setCurrentUrl(url);
       
-      // Crucial: Set properties before src for better compatibility
-      audio.preload = "auto";
+      // Load and play immediately
       audio.src = url;
-      audioPlayerRef.current = audio;
+      audio.load();
       
-      audio.onended = () => {
-        setPlayingRecordingId(null);
-        URL.revokeObjectURL(url);
-      };
-      
-      audio.onerror = (e) => {
-        console.error("Audio playback error:", e);
-        toast({
-          title: "Playback Error",
-          description: "Format not supported by your browser.",
-          variant: "destructive",
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          setPlayingRecordingId(recording.id);
+        }).catch(err => {
+          console.error("Playback blocked:", err);
+          // If blocked, try once more with muted kick (common for mobile/safari)
+          audio.muted = true;
+          audio.play().then(() => {
+            audio.muted = false;
+            setPlayingRecordingId(recording.id);
+          }).catch(innerErr => {
+            console.error("Critical playback block:", innerErr);
+            toast({
+              title: "Playback Blocked",
+              description: "Please click again. Browsers require a fresh user gesture.",
+              variant: "destructive",
+            });
+          });
         });
-        setPlayingRecordingId(null);
-        URL.revokeObjectURL(url);
-      };
-      
-      // Start playback immediately in response to click
-      try {
-        await audio.play();
-        setPlayingRecordingId(recording.id);
-      } catch (playErr) {
-        console.warn("Initial play failed, attempting retry...", playErr);
-        // Sometimes browsers need a second attempt or a slight kick
-        audio.muted = true;
-        await audio.play();
-        audio.muted = false;
-        setPlayingRecordingId(recording.id);
       }
     } catch (err) {
       console.error("Playback setup failed:", err);
-      toast({
-        title: "Playback Blocked",
-        description: "Please try clicking the button again. Browsers sometimes require multiple interactions.",
-        variant: "destructive",
-      });
-      setPlayingRecordingId(null);
     }
   };
 
   return (
     <div className="min-h-screen pb-20 bg-background">
+      {/* Hidden audio element for consistent playback */}
+      <audio 
+        ref={audioRef} 
+        className="hidden" 
+        onEnded={() => setPlayingRecordingId(null)} 
+      />
+
       <header className="sticky top-0 z-10 bg-background border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
           <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full">
@@ -284,7 +274,10 @@ export default function NoteEditor() {
                   <Button 
                     variant={playingRecordingId === recording.id ? "destructive" : "secondary"} 
                     size="sm"
-                    onClick={() => handlePlayback(recording)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handlePlayback(recording);
+                    }}
                   >
                     {playingRecordingId === recording.id ? (
                       <><Pause className="h-4 w-4 mr-2" />Pause</>
