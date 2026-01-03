@@ -68,7 +68,7 @@ export default function NotesPage() {
 
   useEffect(() => {
     fetchNotes();
-  }, [notebookId]);
+  }, [notebookId, navigate]);
 
   const handleEdit = (note: Note) => {
     navigate(`/notes/${note.id}`);
@@ -132,6 +132,10 @@ export default function NotesPage() {
     }
   };
 
+  const handleBackToAllNotes = () => {
+    navigate("/");
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 pb-20">
@@ -166,7 +170,7 @@ export default function NotesPage() {
                 </p>
               </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
+            <Button variant="ghost" size="sm" onClick={handleBackToAllNotes}>
               Back to All Notes
             </Button>
           </div>
