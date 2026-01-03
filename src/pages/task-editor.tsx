@@ -150,7 +150,7 @@ export default function TaskEditor() {
             <Button
               onClick={handleSave}
               disabled={isSaving}
-              className="rounded-full"
+              className="rounded-full px-4"
             >
               <Save className="mr-2 h-4 w-4" />
               Save

@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface FabProps {
   onClick: () => void;
@@ -8,16 +9,26 @@ interface FabProps {
 }
 
 export function Fab({ onClick, className }: FabProps) {
+  const isMobile = useIsMobile();
+  
+  // On mobile, lift the FAB up by the height of the BottomNav (h-16 = 4rem) + padding (p-4 = 1rem) = 5rem
+  const mobileOffset = isMobile ? "bottom-[5rem]" : "bottom-4"; 
+
   return (
-    <Button
+    <div 
       className={cn(
-        "fixed bottom-20 right-4 h-14 w-14 rounded-full shadow-lg md:bottom-6 md:right-6",
+        "fixed right-4 z-40 transition-all duration-300",
+        mobileOffset,
         className
       )}
-      size="icon"
-      onClick={onClick}
     >
-      <Plus className="h-6 w-6" />
-    </Button>
+      <Button 
+        onClick={onClick} 
+        size="lg" 
+        className="rounded-full h-14 w-14 shadow-lg"
+      >
+        <Plus className="h-6 w-6" />
+      </Button>
+    </div>
   );
 }

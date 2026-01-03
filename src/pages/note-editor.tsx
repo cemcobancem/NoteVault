@@ -170,13 +170,14 @@ export default function NoteEditor() {
             </Button>
             
             <Button
-              variant="ghost"
+              variant="default"
               size="sm"
               onClick={() => handleSave()}
               disabled={isSaving}
-              className="rounded-full"
+              className="rounded-full px-4"
             >
-              <Save className="h-4 w-4" />
+              <Save className="h-4 w-4 mr-2" />
+              Save
             </Button>
           </div>
         </div>
