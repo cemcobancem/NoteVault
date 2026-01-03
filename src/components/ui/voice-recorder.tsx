@@ -24,7 +24,7 @@ export function VoiceRecorder({ onTranscriptionComplete, onRecordingComplete }: 
     resetRecording,
   } = useVoiceRecorder();
   
-  const { toast } = useToast();
+  const { toast, dismiss } = useToast(); // Destructure dismiss here
   const [isTranscribing, setIsTranscribing] = useState(false);
 
   const formatTime = (seconds: number) => {
@@ -43,7 +43,7 @@ export function VoiceRecorder({ onTranscriptionComplete, onRecordingComplete }: 
   
   const handleTranscribe = async (audioBlob: Blob, duration: number) => {
     setIsTranscribing(true);
-    const loadingToastId = toast({
+    const loadingToast = toast({
       title: "Transcribing...",
       description: "Processing audio, please wait.",
       variant: "default",
@@ -66,7 +66,7 @@ export function VoiceRecorder({ onTranscriptionComplete, onRecordingComplete }: 
       };
       onRecordingComplete(recording);
 
-      toast.dismiss(loadingToastId);
+      dismiss(loadingToast.id); // Use the global dismiss function with the toast ID
       toast({
         title: "Transcription Complete",
         description: "Audio transcribed and attached to the note.",
@@ -74,7 +74,7 @@ export function VoiceRecorder({ onTranscriptionComplete, onRecordingComplete }: 
       
     } catch (error) {
       console.error("Transcription failed:", error);
-      toast.dismiss(loadingToastId);
+      dismiss(loadingToast.id); // Use the global dismiss function with the toast ID
       toast({
         title: "Transcription Failed",
         description: "Could not transcribe audio. The recording is still attached.",
