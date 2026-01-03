@@ -18,10 +18,13 @@ export function TaskCard({ task, onEdit, onDelete, onComplete }: TaskCardProps) 
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== "done";
 
   return (
-    <Card className={`shadow-sm hover:shadow-md transition-shadow duration-200 bg-white border border-gray-200 ${task.status === "done" ? "opacity-75" : ""}`}>
+    <Card 
+      className={`shadow-sm hover:shadow-md transition-shadow duration-200 bg-white border border-gray-200 cursor-pointer ${task.status === "done" ? "opacity-75" : ""}`}
+      onClick={() => onEdit(task)} // Make the entire card clickable
+    >
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
-          <div className="flex items-start gap-2">
+          <div className="flex items-start gap-2" onClick={(e) => e.stopPropagation()}>
             <Button 
               variant="ghost" 
               size="icon" 
@@ -77,7 +80,7 @@ export function TaskCard({ task, onEdit, onDelete, onComplete }: TaskCardProps) 
         </div>
       )}
       
-      <div className="flex justify-end px-4 pb-3 gap-1">
+      <div className="flex justify-end px-4 pb-3 gap-1" onClick={(e) => e.stopPropagation()}>
         <Button variant="ghost" size="icon" onClick={() => onEdit(task)}>
           <Edit className="h-4 w-4" />
         </Button>
