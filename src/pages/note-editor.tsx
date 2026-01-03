@@ -7,7 +7,7 @@ import { TagInput } from "@/components/ui/tag-input";
 import { db } from "@/lib/db";
 import { Note, AudioRecording } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { Save, ArrowLeft, Mic, FileText, Volume2, Play, Pause } from "lucide-react";
+import { Save, ArrowLeft, Mic, FileText, Volume2, Play, Pause, AlertCircle } from "lucide-react";
 import { NotebookSelector } from "@/components/ui/notebook-selector";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -41,7 +41,6 @@ export default function NoteEditor() {
       fetchNote(id);
     }
     
-    // Cleanup audio player on unmount
     return () => {
       if (audioPlayerRef.current) {
         audioPlayerRef.current.pause();
@@ -78,17 +77,10 @@ export default function NoteEditor() {
   };
 
   const handleChange = (field: keyof Note, value: any) => {
-    const updatedNote = {
-      ...note,
-      [field]: value,
-      updatedAt: new Date()
-    };
+    const updatedNote = { ...note, [field]: value, updatedAt: new Date() };
     setNote(updatedNote);
     
-    // Auto-save after 1 second of inactivity
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
       handleSave(updatedNote);
     }, 1000);
@@ -103,27 +95,13 @@ export default function NoteEditor() {
     setIsSaving(true);
     try {
       if (id) {
-        // Update existing note
         await db.notes.update(id, noteData);
       } else {
-        // Create new note
-        await db.notes.add({
-          ...noteData,
-          id: crypto.randomUUID()
-        });
+        await db.notes.add({ ...noteData, id: crypto.randomUUID() });
       }
       setLastSaved(new Date().toLocaleTimeString());
-      toast({
-        title: "Note saved",
-        description: "Your note has been saved successfully",
-      });
     } catch (error) {
       console.error("Failed to save note:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save note",
-        variant: "destructive",
-      });
     } finally {
       setIsSaving(false);
     }
@@ -134,7 +112,6 @@ export default function NoteEditor() {
       clearTimeout(saveTimeoutRef.current);
       handleSave();
     }
-    // Navigate back to the notebook or to all notes
     if (note.notebookId) {
       navigate(`/notebooks/${note.notebookId}`);
     } else {
@@ -142,16 +119,13 @@ export default function NoteEditor() {
     }
   };
 
-  const handleCreateNotebook = () => {
-    setIsNotebookDialogOpen(true);
-  };
+  const handleCreateNotebook = () => setIsNotebookDialogOpen(true);
 
   const handleTranscriptionComplete = (transcribedText: string) => {
     const updatedContent = note.content 
       ? `${note.content}\n\n${transcribedText}` 
       : transcribedText;
     
-    // Add voice/recording tag if not already present
     let updatedTags = [...note.tags];
     if (!updatedTags.includes("voice") && !updatedTags.includes("recording")) {
       updatedTags = [...updatedTags, "voice"];
@@ -159,7 +133,6 @@ export default function NoteEditor() {
     
     handleChange("content", updatedContent);
     handleChange("tags", updatedTags);
-    // Note: VoiceRecorder handles closing itself after transcription/recording completion
   };
 
   const handleRecordingComplete = (recording: AudioRecording) => {
@@ -180,7 +153,6 @@ export default function NoteEditor() {
   
   const handlePlayback = (recording: AudioRecording) => {
     if (playingRecordingId === recording.id) {
-      // Pause if currently playing
       if (audioPlayerRef.current) {
         audioPlayerRef.current.pause();
         setPlayingRecordingId(null);
@@ -188,55 +160,77 @@ export default function NoteEditor() {
       return;
     }
     
-    // Stop any currently playing audio
     if (audioPlayerRef.current) {
       audioPlayerRef.current.pause();
       audioPlayerRef.current = null;
     }
     
-    // Start new playback
-    const url = URL.createObjectURL(recording.blob);
-    audioPlayerRef.current = new Audio(url);
-    
-    audioPlayerRef.current.onended = () => {
-      setPlayingRecordingId(null);
-      URL.revokeObjectURL(url); // Clean up the object URL
-    };
-    
-    audioPlayerRef.current.play();
-    setPlayingRecordingId(recording.id);
+    try {
+      // Ensure the blob is valid
+      if (!(recording.blob instanceof Blob)) {
+        throw new Error("Invalid audio data");
+      }
+
+      const url = URL.createObjectURL(recording.blob);
+      const audio = new Audio();
+      audio.src = url;
+      audioPlayerRef.current = audio;
+      
+      audio.onended = () => {
+        setPlayingRecordingId(null);
+        URL.revokeObjectURL(url);
+      };
+      
+      audio.onerror = (e) => {
+        console.error("Audio element error:", e);
+        toast({
+          title: "Playback Error",
+          description: "This audio format may not be supported in your browser.",
+          variant: "destructive",
+        });
+        setPlayingRecordingId(null);
+        URL.revokeObjectURL(url);
+      };
+      
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          setPlayingRecordingId(recording.id);
+        }).catch(err => {
+          console.error("Playback failed:", err);
+          toast({
+            title: "Playback Failed",
+            description: "Browser blocked audio playback. Try clicking again.",
+            variant: "destructive",
+          });
+          setPlayingRecordingId(null);
+          URL.revokeObjectURL(url);
+        });
+      }
+    } catch (err) {
+      console.error("Error setting up playback:", err);
+      toast({
+        title: "Error",
+        description: "Could not initialize audio player.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
     <div className="min-h-screen pb-20 bg-background">
       <header className="sticky top-0 z-10 bg-background border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={handleBack}
-            className="rounded-full"
-          >
+          <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           
           <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setIsVoiceRecorderOpen(true)}
-              className="rounded-full"
-            >
+            <Button variant="ghost" size="icon" onClick={() => setIsVoiceRecorderOpen(true)} className="rounded-full">
               <Mic className="h-5 w-5" />
             </Button>
             
-            <Button 
-              variant="default" 
-              size="sm" 
-              onClick={() => handleSave()}
-              disabled={isSaving}
-              className="rounded-full px-4"
-            >
+            <Button variant="default" size="sm" onClick={() => handleSave()} disabled={isSaving} className="rounded-full px-4">
               <Save className="h-4 w-4 mr-2" />
               Save
             </Button>
@@ -255,9 +249,7 @@ export default function NoteEditor() {
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <FileText className="h-4 w-4" />
           <span>
-            {lastSaved 
-              ? `Saved at ${lastSaved}` 
-              : note.createdAt.toLocaleDateString()}
+            {lastSaved ? `Saved at ${lastSaved}` : note.createdAt.toLocaleDateString()}
           </span>
         </div>
         
@@ -295,15 +287,9 @@ export default function NoteEditor() {
                     onClick={() => handlePlayback(recording)}
                   >
                     {playingRecordingId === recording.id ? (
-                      <>
-                        <Pause className="h-4 w-4 mr-2" />
-                        Pause
-                      </>
+                      <><Pause className="h-4 w-4 mr-2" />Pause</>
                     ) : (
-                      <>
-                        <Play className="h-4 w-4 mr-2" />
-                        Play
-                      </>
+                      <><Play className="h-4 w-4 mr-2" />Play</>
                     )}
                   </Button>
                 </div>
@@ -314,10 +300,7 @@ export default function NoteEditor() {
         
         <div className="space-y-2">
           <Label className="text-sm font-medium">Tags</Label>
-          <TagInput 
-            tags={note.tags} 
-            onChange={(tags) => handleChange("tags", tags)} 
-          />
+          <TagInput tags={note.tags} onChange={(tags) => handleChange("tags", tags)} />
         </div>
       </div>
       
@@ -327,16 +310,8 @@ export default function NoteEditor() {
             <DialogTitle>Create New Notebook</DialogTitle>
           </DialogHeader>
           <div className="py-4 space-y-4">
-            <p className="text-muted-foreground">
-              To create a new notebook, please go to the Notebooks section.
-            </p>
-            <Button 
-              className="w-full" 
-              onClick={() => {
-                setIsNotebookDialogOpen(false);
-                navigate("/notebooks");
-              }}
-            >
+            <p className="text-muted-foreground">To create a new notebook, please go to the Notebooks section.</p>
+            <Button className="w-full" onClick={() => { setIsNotebookDialogOpen(false); navigate("/notebooks"); }}>
               Go to Notebooks
             </Button>
           </div>
