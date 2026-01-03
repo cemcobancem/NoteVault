@@ -32,16 +32,13 @@ const initializeApp = async () => {
       showError("Failed to initialize database");
       return;
     }
-    
     await seedDemoData();
     showSuccess("App initialized successfully");
-    
     // Render the main app
     root.render(<App />);
   } catch (error) {
     console.error("App initialization failed:", error);
     showError("Failed to initialize app");
-    
     // Even if initialization fails, still show the app
     root.render(<App />);
   }
