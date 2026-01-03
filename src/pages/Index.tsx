@@ -15,18 +15,26 @@ export default function NotesPage() {
   const [pinnedNotes, setPinnedNotes] = useState<Note[]>([]);
   const [otherNotes, setOtherNotes] = useState<Note[]>([]);
   const [notebook, setNotebook] = useState<Notebook | null>(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const fetchNotes = async () => {
     try {
+      setLoading(true);
       let allNotes: Note[] = [];
+      
       if (notebookId) {
         // Fetch notebook details
         const notebookData = await db.notebooks.get(notebookId);
         if (notebookData) {
           setNotebook(notebookData);
+        } else {
+          // If notebook doesn't exist, redirect to main notes page
+          navigate("/");
+          return;
         }
+        
         // Fetch notes for this notebook
         allNotes = await db.notes
           .where("notebookId")
@@ -43,6 +51,7 @@ export default function NotesPage() {
       
       const pinned = allNotes.filter(note => note.pinned);
       const others = allNotes.filter(note => !note.pinned);
+      
       setNotes(allNotes);
       setPinnedNotes(pinned);
       setOtherNotes(others);
@@ -50,9 +59,11 @@ export default function NotesPage() {
       console.error("Failed to fetch notes:", error);
       toast({
         title: "Error",
-        description: "Failed to load notes",
+        description: "Failed to load notes. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -119,6 +130,22 @@ export default function NotesPage() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen pb-20 bg-background">
+        <AppBar title={notebook ? notebook.name : "All Notes"} showMenu={!notebookId} />
+        <div className="container py-4">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mb-2"></div>
+              <p className="text-muted-foreground">Loading notes...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen pb-20 bg-background">
       <AppBar title={notebook ? notebook.name : "All Notes"} showMenu={!notebookId} />
@@ -134,7 +161,7 @@ export default function NotesPage() {
               <div>
                 <h1 className="text-xl font-bold">{notebook.name}</h1>
                 <p className="text-sm text-muted-foreground">
-                  {otherNotes.length + pinnedNotes.length} {otherNotes.length + pinnedNotes.length === 1 ? 'note' : 'notes'}
+                  {notes.length} {notes.length === 1 ? 'note' : 'notes'}
                 </p>
               </div>
             </div>

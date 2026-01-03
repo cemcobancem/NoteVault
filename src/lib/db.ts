@@ -25,6 +25,7 @@ class NotesAppDB extends Dexie {
 
   constructor() {
     super("NotesAppDB");
+    
     this.version(2).stores({
       notebooks: "++id, name, createdAt, updatedAt",
       notes: "++id, title, content, tags, createdAt, updatedAt, pinned, archived, notebookId",
@@ -34,4 +35,18 @@ class NotesAppDB extends Dexie {
   }
 }
 
+// Create a singleton instance
 export const db = new NotesAppDB();
+
+// Initialize database with better error handling
+export const initDB = async () => {
+  try {
+    // Test database connection
+    await db.notebooks.count();
+    console.log("Database initialized successfully");
+    return true;
+  } catch (error) {
+    console.error("Database initialization failed:", error);
+    return false;
+  }
+};

@@ -14,11 +14,13 @@ export default function TasksPage() {
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [priorityFilter, setPriorityFilter] = useState<Priority | "all">("all");
   const [statusFilter, setStatusFilter] = useState<Status | "all">("all");
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const fetchTasks = async () => {
     try {
+      setLoading(true);
       const allTasks = await db.tasks
         .orderBy("updatedAt")
         .reverse()
@@ -29,9 +31,11 @@ export default function TasksPage() {
       console.error("Failed to fetch tasks:", error);
       toast({
         title: "Error",
-        description: "Failed to load tasks",
+        description: "Failed to load tasks. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -45,12 +49,15 @@ export default function TasksPage() {
     status: Status | "all"
   ) => {
     let result = tasksToFilter;
+    
     if (priority !== "all") {
       result = result.filter(task => task.priority === priority);
     }
+    
     if (status !== "all") {
       result = result.filter(task => task.status === status);
     }
+    
     setFilteredTasks(result);
   };
 
@@ -106,6 +113,22 @@ export default function TasksPage() {
 
   const hasFilters = priorityFilter !== "all" || statusFilter !== "all";
 
+  if (loading) {
+    return (
+      <div className="min-h-screen pb-20 bg-background">
+        <AppBar title="Tasks" />
+        <div className="container py-4">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mb-2"></div>
+              <p className="text-muted-foreground">Loading tasks...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen pb-20 bg-background">
       <AppBar title="Tasks" />
@@ -113,31 +136,31 @@ export default function TasksPage() {
       <div className="container py-4 space-y-6">
         <div className="flex flex-wrap gap-2">
           <Button 
-            variant={priorityFilter === "all" ? "default" : "outline"}
-            size="sm"
+            variant={priorityFilter === "all" ? "default" : "outline"} 
+            size="sm" 
             onClick={() => setPriorityFilter("all")}
           >
             All
           </Button>
           <Button 
-            variant={priorityFilter === "low" ? "default" : "outline"}
-            size="sm"
+            variant={priorityFilter === "low" ? "default" : "outline"} 
+            size="sm" 
             onClick={() => setPriorityFilter("low")}
           >
             <span className="hidden sm:inline">Low</span>
             <span className="sm:hidden">L</span>
           </Button>
           <Button 
-            variant={priorityFilter === "medium" ? "default" : "outline"}
-            size="sm"
+            variant={priorityFilter === "medium" ? "default" : "outline"} 
+            size="sm" 
             onClick={() => setPriorityFilter("medium")}
           >
             <span className="hidden sm:inline">Medium</span>
             <span className="sm:hidden">M</span>
           </Button>
           <Button 
-            variant={priorityFilter === "high" ? "default" : "outline"}
-            size="sm"
+            variant={priorityFilter === "high" ? "default" : "outline"} 
+            size="sm" 
             onClick={() => setPriorityFilter("high")}
           >
             <span className="hidden sm:inline">High</span>
@@ -147,22 +170,22 @@ export default function TasksPage() {
           <div className="border-l border-border mx-1 h-6 self-center"></div>
           
           <Button 
-            variant={statusFilter === "all" ? "default" : "outline"}
-            size="sm"
+            variant={statusFilter === "all" ? "default" : "outline"} 
+            size="sm" 
             onClick={() => setStatusFilter("all")}
           >
             All
           </Button>
           <Button 
-            variant={statusFilter === "open" ? "default" : "outline"}
-            size="sm"
+            variant={statusFilter === "open" ? "default" : "outline"} 
+            size="sm" 
             onClick={() => setStatusFilter("open")}
           >
             Open
           </Button>
           <Button 
-            variant={statusFilter === "done" ? "default" : "outline"}
-            size="sm"
+            variant={statusFilter === "done" ? "default" : "outline"} 
+            size="sm" 
             onClick={() => setStatusFilter("done")}
           >
             Done
@@ -193,7 +216,7 @@ export default function TasksPage() {
                 : "Create your first task to start organizing your work."}
             </p>
             <Button 
-              onClick={() => navigate("/tasks/new")}
+              onClick={() => navigate("/tasks/new")} 
               size="lg"
             >
               <Plus className="mr-2 h-4 w-4" />

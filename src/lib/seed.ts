@@ -9,8 +9,11 @@ export const seedDemoData = async () => {
     const notebookCount = await db.notebooks.count();
     
     if (noteCount > 0 || taskCount > 0 || notebookCount > 0) {
+      console.log("Demo data already exists, skipping seeding");
       return;
     }
+    
+    console.log("Seeding demo data...");
     
     // Seed notebooks
     const demoNotebooks: Omit<Notebook, "id">[] = [
@@ -131,5 +134,6 @@ export const seedDemoData = async () => {
     console.log("Demo data seeded successfully");
   } catch (error) {
     console.error("Failed to seed demo data:", error);
+    throw new Error("Failed to seed demo data");
   }
 };

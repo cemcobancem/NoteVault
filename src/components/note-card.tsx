@@ -18,9 +18,11 @@ interface NoteCardProps {
 
 export function NoteCard({ note, onEdit, onDelete, onPin, onArchive }: NoteCardProps) {
   const [notebook, setNotebook] = useState<{name: string, color: string} | null>(null);
+  const [loadingNotebook, setLoadingNotebook] = useState(false);
 
   const fetchNotebook = async () => {
     if (note.notebookId) {
+      setLoadingNotebook(true);
       try {
         const notebookData = await db.notebooks.get(note.notebookId);
         if (notebookData) {
@@ -28,6 +30,8 @@ export function NoteCard({ note, onEdit, onDelete, onPin, onArchive }: NoteCardP
         }
       } catch (error) {
         console.error("Failed to fetch notebook:", error);
+      } finally {
+        setLoadingNotebook(false);
       }
     }
   };
@@ -46,28 +50,28 @@ export function NoteCard({ note, onEdit, onDelete, onPin, onArchive }: NoteCardP
       
       <CardHeader className="pb-2">
         <div className="flex justify-between items-start">
-          <CardTitle className="text-lg line-clamp-2">{note.title}</CardTitle>
+          <CardTitle className="text-lg line-clamp-2">{note.title || "Untitled Note"}</CardTitle>
         </div>
-        {notebook && (
+        
+        {loadingNotebook ? (
+          <div className="h-4 w-20 bg-muted rounded animate-pulse"></div>
+        ) : notebook && (
           <div className="mt-1">
-            <NotebookBadge 
-              name={notebook.name} 
-              color={notebook.color} 
-              className="text-xs"
-            />
+            <NotebookBadge name={notebook.name} color={notebook.color} className="text-xs" />
           </div>
         )}
+        
         <p className="text-xs text-muted-foreground">
-          {format(new Date(note.updatedAt), "MMM d, yyyy h:mm a")}
+          {note.updatedAt ? format(new Date(note.updatedAt), "MMM d, yyyy h:mm a") : "Unknown date"}
         </p>
       </CardHeader>
       
       <CardContent className="pb-3">
         <p className="text-sm text-muted-foreground line-clamp-3">
-          {note.content}
+          {note.content || "No content"}
         </p>
         
-        {note.tags.length > 0 && (
+        {note.tags && note.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-2">
             {note.tags.map((tag) => (
               <Badge key={tag} variant="secondary" className="text-xs">
