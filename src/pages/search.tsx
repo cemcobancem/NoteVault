@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, FileText, CheckSquare } from "lucide-react";
+import { Search, FileText, CheckSquare, Plus } from "lucide-react";
 import { AppBar } from "@/components/ui/app-bar";
 import { Input } from "@/components/ui/input";
 import { NoteCard } from "@/components/note-card";
@@ -9,6 +9,8 @@ import { db } from "@/lib/db";
 import { Note, Task } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Fab } from "@/components/ui/fab";
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");
@@ -29,7 +31,6 @@ export default function SearchPage() {
         .orderBy("updatedAt")
         .reverse()
         .toArray();
-      
       setNotes(allNotes);
       setTasks(allTasks);
       setFilteredNotes(allNotes);
@@ -54,7 +55,6 @@ export default function SearchPage() {
       setFilteredTasks(tasks);
       return;
     }
-    
     const lowerQuery = query.toLowerCase();
     const filteredNotes = notes.filter(
       (note) =>
@@ -62,14 +62,12 @@ export default function SearchPage() {
         note.content.toLowerCase().includes(lowerQuery) ||
         note.tags.some((tag) => tag.toLowerCase().includes(lowerQuery))
     );
-    
     const filteredTasks = tasks.filter(
       (task) =>
         task.title.toLowerCase().includes(lowerQuery) ||
         (task.description && task.description.toLowerCase().includes(lowerQuery)) ||
         task.tags.some((tag) => tag.toLowerCase().includes(lowerQuery))
     );
-    
     setFilteredNotes(filteredNotes);
     setFilteredTasks(filteredTasks);
   }, [query, notes, tasks]);
@@ -80,7 +78,6 @@ export default function SearchPage() {
 
   const handleNoteDelete = async (note: Note) => {
     if (!note.id) return;
-    
     try {
       await db.notes.delete(note.id);
       toast({
@@ -100,7 +97,6 @@ export default function SearchPage() {
 
   const handleNotePin = async (note: Note) => {
     if (!note.id) return;
-    
     try {
       await db.notes.update(note.id, {
         pinned: !note.pinned,
@@ -119,7 +115,6 @@ export default function SearchPage() {
 
   const handleNoteArchive = async (note: Note) => {
     if (!note.id) return;
-    
     try {
       await db.notes.update(note.id, {
         archived: !note.archived,
@@ -142,7 +137,6 @@ export default function SearchPage() {
 
   const handleTaskDelete = async (task: Task) => {
     if (!task.id) return;
-    
     try {
       await db.tasks.delete(task.id);
       toast({
@@ -162,7 +156,6 @@ export default function SearchPage() {
 
   const handleTaskComplete = async (task: Task) => {
     if (!task.id) return;
-    
     try {
       await db.tasks.update(task.id, {
         status: task.status === "done" ? "open" : "done",
@@ -179,6 +172,10 @@ export default function SearchPage() {
     }
   };
 
+  const handleCreateNote = () => {
+    navigate("/notes/new");
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <AppBar title="Search" showSearch={false} />
@@ -193,12 +190,19 @@ export default function SearchPage() {
           />
         </div>
         
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-semibold">Your Workspace</h2>
+          <Button onClick={handleCreateNote} size="sm">
+            <Plus className="mr-2 h-4 w-4" />
+            New Note
+          </Button>
+        </div>
+
         <Tabs defaultValue="notes" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="notes" className="flex items-center gap-2 py-3">
               <FileText className="h-4 w-4" />
-              Notes
-              {filteredNotes.length > 0 && (
+              Notes {filteredNotes.length > 0 && (
                 <span className="text-xs bg-muted rounded-full px-2 py-0.5">
                   {filteredNotes.length}
                 </span>
@@ -206,15 +210,13 @@ export default function SearchPage() {
             </TabsTrigger>
             <TabsTrigger value="tasks" className="flex items-center gap-2 py-3">
               <CheckSquare className="h-4 w-4" />
-              Tasks
-              {filteredTasks.length > 0 && (
+              Tasks {filteredTasks.length > 0 && (
                 <span className="text-xs bg-muted rounded-full px-2 py-0.5">
                   {filteredTasks.length}
                 </span>
               )}
             </TabsTrigger>
           </TabsList>
-          
           <TabsContent value="notes" className="mt-0">
             {filteredNotes.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center rounded-lg border border-dashed bg-white shadow-sm">
@@ -225,10 +227,14 @@ export default function SearchPage() {
                   {query ? "No notes match your search" : "No notes found"}
                 </h3>
                 <p className="text-muted-foreground max-w-md">
-                  {query 
-                    ? "Try different search terms to find what you're looking for." 
+                  {query
+                    ? "Try different search terms to find what you're looking for."
                     : "Create your first note to get started."}
                 </p>
+                <Button onClick={handleCreateNote} className="mt-4">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Note
+                </Button>
               </div>
             ) : (
               <div className="grid gap-4">
@@ -245,7 +251,6 @@ export default function SearchPage() {
               </div>
             )}
           </TabsContent>
-          
           <TabsContent value="tasks" className="mt-0">
             {filteredTasks.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center rounded-lg border border-dashed bg-white shadow-sm">
@@ -256,8 +261,8 @@ export default function SearchPage() {
                   {query ? "No tasks match your search" : "No tasks found"}
                 </h3>
                 <p className="text-muted-foreground max-w-md">
-                  {query 
-                    ? "Try different search terms to find what you're looking for." 
+                  {query
+                    ? "Try different search terms to find what you're looking for."
                     : "Create your first task to get started."}
                 </p>
               </div>
@@ -277,6 +282,8 @@ export default function SearchPage() {
           </TabsContent>
         </Tabs>
       </div>
+      
+      <Fab onClick={handleCreateNote} />
     </div>
   );
 }
