@@ -192,13 +192,6 @@ export default function SearchPage() {
         
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold">Your Workspace</h2>
-          <Button 
-            onClick={handleCreateNote} 
-            size="sm"
-            className="bg-green-500 hover:bg-green-600 rounded-full h-10 w-10 p-0"
-          >
-            <Plus className="h-5 w-5 text-white" />
-          </Button>
         </div>
 
         <Tabs defaultValue="notes" className="w-full">
