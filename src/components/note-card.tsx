@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pin, Archive, Edit, Trash2, BookOpen, Mic, Volume2 } from "lucide-react";
+import { Pin, Archive, Edit, Trash2, Volume2 } from "lucide-react";
 import { Note } from "@/types";
 import { format } from "date-fns";
 import { db } from "@/lib/db";
@@ -47,7 +47,10 @@ export function NoteCard({ note, onEdit, onDelete, onPin, onArchive }: NoteCardP
   const hasAudioRecordings = note.audioRecordings && note.audioRecordings.length > 0;
 
   return (
-    <Card className="relative shadow-sm hover:shadow-md transition-shadow duration-200 bg-white border border-gray-200">
+    <Card 
+      className="relative shadow-sm hover:shadow-md transition-shadow duration-200 bg-white border border-gray-200 cursor-pointer"
+      onClick={() => onEdit(note)}
+    >
       {note.pinned && (
         <div className="absolute top-2 right-2">
           <Pin className="h-4 w-4 text-primary" fill="currentColor" />
@@ -86,7 +89,8 @@ export function NoteCard({ note, onEdit, onDelete, onPin, onArchive }: NoteCardP
           </div>
         )}
       </CardContent>
-      <div className="flex justify-end px-4 pb-3 gap-1">
+      {/* Action buttons are moved to a separate div to prevent click propagation */}
+      <div className="flex justify-end px-4 pb-3 gap-1" onClick={(e) => e.stopPropagation()}>
         <Button variant="ghost" size="icon" onClick={() => onPin(note)}>
           <Pin className="h-4 w-4" />
         </Button>
