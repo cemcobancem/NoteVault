@@ -21,11 +21,22 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
   const audioChunksRef = useRef<Blob[]>([]);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const mimeTypeRef = useRef<string>('audio/webm'); // Store the determined MIME type
 
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+      
+      // Determine the best supported MIME type
+      let mimeType = 'audio/webm';
+      if (MediaRecorder.isTypeSupported('audio/webm; codecs=opus')) {
+        mimeType = 'audio/webm; codecs=opus';
+      } else if (MediaRecorder.isTypeSupported('audio/ogg; codecs=opus')) {
+        mimeType = 'audio/ogg; codecs=opus';
+      }
+      mimeTypeRef.current = mimeType;
+
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
@@ -36,7 +47,6 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
       };
 
       mediaRecorder.onstop = () => {
-        // This part is now handled by the return value of stopRecording
         stream.getTracks().forEach(track => track.stop());
       };
 
@@ -68,7 +78,8 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
       }
       
       const finalDuration = recordingTime;
-      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+      // Use the determined MIME type when creating the Blob
+      const audioBlob = new Blob(audioChunksRef.current, { type: mimeTypeRef.current });
       const url = URL.createObjectURL(audioBlob);
       setAudioUrl(url);
       
@@ -83,6 +94,11 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
         audioRef.current = new Audio(audioUrl);
         audioRef.current.onended = () => {
           setIsPlaying(false);
+        };
+        // Add error handling for playback failure
+        audioRef.current.onerror = (e) => {
+          console.error("Audio playback error:", e);
+          // Optionally notify the user via toast if playback fails
         };
       }
 
